@@ -1,0 +1,1 @@
+{"name":"default-3x8","card_size_mm":[85,50],"rotation_deg":-90,"crop_anchor":"center","grid":[3,8],"gap_mm":[1,1],"align":"sheet-center","safe_area_mm":[15,33,290,458],"slot_order":"row-major"}
