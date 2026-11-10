@@ -1,0 +1,6 @@
+{
+  "template": "t2-03-err-overlap",
+  "expect": "error",
+  "error_code": "SLOT_OVERLAP",
+  "output_pdf": "must_not_exist"
+}

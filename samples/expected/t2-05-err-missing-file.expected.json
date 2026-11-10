@@ -1,0 +1,6 @@
+{
+  "template": "t2-05-err-missing-file",
+  "expect": "error",
+  "error_code": "FILE_NOT_FOUND",
+  "output_pdf": "must_not_exist"
+}

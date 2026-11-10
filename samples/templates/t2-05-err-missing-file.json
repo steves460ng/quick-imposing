@@ -1,0 +1,51 @@
+{
+  "schema": "quick-imposing/template@1",
+  "name": "t2-05-err-missing-file",
+  "description": "존재하지 않는 B 파일(B-9.pdf) 배정",
+  "units": "mm",
+  "origin": "top-left",
+  "base": {
+    "file": "samples/input/base.pdf",
+    "size_mm": [
+      305,
+      506
+    ],
+    "safe_area_mm": [
+      15,
+      33,
+      290,
+      458
+    ]
+  },
+  "card": {
+    "size_mm": [
+      85,
+      50
+    ],
+    "rotation_deg": -90,
+    "crop_anchor": "center",
+    "source_box": "TrimBox"
+  },
+  "slots": [
+    {
+      "id": 1,
+      "x": 25,
+      "y": 40
+    },
+    {
+      "id": 2,
+      "x": 110,
+      "y": 40
+    }
+  ],
+  "data": [
+    {
+      "slot": 1,
+      "file": "samples/input/B-1.pdf"
+    },
+    {
+      "slot": 2,
+      "file": "samples/input/B-9.pdf"
+    }
+  ]
+}

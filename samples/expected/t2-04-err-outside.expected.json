@@ -1,0 +1,6 @@
+{
+  "template": "t2-04-err-outside",
+  "expect": "error",
+  "error_code": "SLOT_OUT_OF_SAFE_AREA",
+  "output_pdf": "must_not_exist"
+}
