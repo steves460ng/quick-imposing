@@ -513,6 +513,13 @@ def run_suite(out, font_dirs=()):
         try:
             report = generate(project, root, output, font_dirs)
             checks = validate_case(name, project, root, output, report, expected)
+            checks.append(
+                dict(
+                    id="named_report",
+                    passed=json.loads(output.with_suffix(".report.json").read_text())
+                    == report,
+                )
+            )
             if name == "T31-09" and output.exists():
                 with (
                     p.open(out / "T31-01/result.pdf") as first,
@@ -558,7 +565,7 @@ def run_suite(out, font_dirs=()):
                         )
                     )
             report["test_checks"] = checks
-            (directory / "report.json").write_text(
+            output.with_suffix(".report.json").write_text(
                 json.dumps(report, ensure_ascii=False, indent=2) + "\n"
             )
             failed = [c for c in checks if not c["passed"]]

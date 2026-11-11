@@ -1,0 +1,116 @@
+{
+  "case": "T32-06",
+  "expect": "pass",
+  "error_codes": [],
+  "steps": [
+    {
+      "sorted_files": [
+        "c-1.pdf",
+        "c-2.pdf",
+        "c-3.pdf",
+        "c-10.pdf",
+        "c-11.pdf"
+      ],
+      "added": [
+        {
+          "cell": 2,
+          "file": "c-1.pdf",
+          "order": 2
+        },
+        {
+          "cell": 3,
+          "file": "c-2.pdf",
+          "order": 3
+        }
+      ],
+      "unplaced_files": [
+        "c-3.pdf",
+        "c-10.pdf",
+        "c-11.pdf"
+      ],
+      "warnings": [
+        {
+          "code": "AUTOFILL_BLOCKED",
+          "reason": "occupied",
+          "blocked_cell": 4,
+          "unplaced_files": [
+            "c-3.pdf",
+            "c-10.pdf",
+            "c-11.pdf"
+          ]
+        }
+      ]
+    }
+  ],
+  "placements": [
+    {
+      "cell": 4,
+      "file": "B-3.pdf",
+      "order": 1
+    },
+    {
+      "cell": 2,
+      "file": "c-1.pdf",
+      "order": 2
+    },
+    {
+      "cell": 3,
+      "file": "c-2.pdf",
+      "order": 3
+    }
+  ],
+  "pdf": [
+    {
+      "cell": 4,
+      "cm": [
+        0,
+        -1,
+        1,
+        0,
+        65.144,
+        1152.262
+      ],
+      "bbox": [
+        2.814,
+        2.888,
+        144.546,
+        243.832
+      ]
+    },
+    {
+      "cell": 2,
+      "cm": [
+        0,
+        -1,
+        1,
+        0,
+        308.923,
+        1296.829
+      ],
+      "bbox": [
+        2.814,
+        2.888,
+        144.546,
+        243.832
+      ]
+    },
+    {
+      "cell": 3,
+      "cm": [
+        0,
+        -1,
+        1,
+        0,
+        552.703,
+        1296.829
+      ],
+      "bbox": [
+        2.814,
+        2.888,
+        144.546,
+        243.832
+      ]
+    }
+  ],
+  "tolerance_pt": 0.01
+}

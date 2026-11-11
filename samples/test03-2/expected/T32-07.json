@@ -1,0 +1,65 @@
+{
+  "case": "T32-07",
+  "expect": "pass",
+  "error_codes": [],
+  "steps": [
+    {
+      "sorted_files": [
+        "c-1.pdf",
+        "c-2.pdf",
+        "c-3.pdf",
+        "c-10.pdf",
+        "c-11.pdf"
+      ],
+      "added": [],
+      "unplaced_files": [
+        "c-1.pdf",
+        "c-2.pdf",
+        "c-3.pdf",
+        "c-10.pdf",
+        "c-11.pdf"
+      ],
+      "warnings": [
+        {
+          "code": "AUTOFILL_BLOCKED",
+          "reason": "occupied",
+          "blocked_cell": 1,
+          "unplaced_files": [
+            "c-1.pdf",
+            "c-2.pdf",
+            "c-3.pdf",
+            "c-10.pdf",
+            "c-11.pdf"
+          ]
+        }
+      ]
+    }
+  ],
+  "placements": [
+    {
+      "cell": 1,
+      "file": "B-3.pdf",
+      "order": 1
+    }
+  ],
+  "pdf": [
+    {
+      "cell": 1,
+      "cm": [
+        0,
+        -1,
+        1,
+        0,
+        65.144,
+        1296.829
+      ],
+      "bbox": [
+        2.814,
+        2.888,
+        144.546,
+        243.832
+      ]
+    }
+  ],
+  "tolerance_pt": 0.01
+}

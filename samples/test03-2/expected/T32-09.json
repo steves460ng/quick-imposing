@@ -1,0 +1,30 @@
+{
+  "case": "T32-09",
+  "expect": "error",
+  "error_codes": [
+    "CELL_NOT_IN_TEMPLATE"
+  ],
+  "steps": [
+    {
+      "sorted_files": [
+        "c-1.pdf",
+        "c-2.pdf",
+        "c-3.pdf",
+        "c-10.pdf",
+        "c-11.pdf"
+      ],
+      "added": [],
+      "unplaced_files": [
+        "c-1.pdf",
+        "c-2.pdf",
+        "c-3.pdf",
+        "c-10.pdf",
+        "c-11.pdf"
+      ],
+      "warnings": []
+    }
+  ],
+  "placements": [],
+  "pdf": [],
+  "tolerance_pt": 0.01
+}

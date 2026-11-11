@@ -1,0 +1,182 @@
+[
+  {
+    "case": "T32-01",
+    "steps": [
+      {
+        "start_cell": 1,
+        "files": [
+          "data/c-10.pdf",
+          "data/c-3.pdf",
+          "data/c-11.pdf",
+          "data/c-1.pdf",
+          "data/c-2.pdf"
+        ]
+      }
+    ],
+    "template": "T32-fwd-3x3"
+  },
+  {
+    "case": "T32-02",
+    "steps": [
+      {
+        "start_cell": 5,
+        "files": [
+          "data/c-10.pdf",
+          "data/c-3.pdf",
+          "data/c-11.pdf",
+          "data/c-1.pdf",
+          "data/c-2.pdf"
+        ]
+      }
+    ],
+    "template": "T32-fwd-3x3"
+  },
+  {
+    "case": "T32-03",
+    "steps": [
+      {
+        "start_cell": 3,
+        "files": [
+          "data/c-10.pdf",
+          "data/c-3.pdf",
+          "data/c-11.pdf",
+          "data/c-1.pdf",
+          "data/c-2.pdf"
+        ]
+      }
+    ],
+    "template": "T32-rev-3x3"
+  },
+  {
+    "case": "T32-04",
+    "steps": [
+      {
+        "start_cell": 5,
+        "files": [
+          "data/c-10.pdf",
+          "data/c-3.pdf",
+          "data/c-11.pdf",
+          "data/c-1.pdf",
+          "data/c-2.pdf"
+        ]
+      }
+    ],
+    "template": "T32-rev-3x3"
+  },
+  {
+    "case": "T32-05",
+    "steps": [
+      {
+        "start_cell": 7,
+        "files": [
+          "data/c-10.pdf",
+          "data/c-3.pdf",
+          "data/c-11.pdf",
+          "data/c-1.pdf",
+          "data/c-2.pdf"
+        ]
+      }
+    ],
+    "template": "T32-fwd-3x3"
+  },
+  {
+    "case": "T32-06",
+    "steps": [
+      {
+        "start_cell": 2,
+        "files": [
+          "data/c-10.pdf",
+          "data/c-3.pdf",
+          "data/c-11.pdf",
+          "data/c-1.pdf",
+          "data/c-2.pdf"
+        ]
+      }
+    ],
+    "project": "projects/T32-06.qiproj.json"
+  },
+  {
+    "case": "T32-07",
+    "steps": [
+      {
+        "start_cell": 1,
+        "files": [
+          "data/c-10.pdf",
+          "data/c-3.pdf",
+          "data/c-11.pdf",
+          "data/c-1.pdf",
+          "data/c-2.pdf"
+        ]
+      }
+    ],
+    "project": "projects/T32-07.qiproj.json"
+  },
+  {
+    "case": "T32-08",
+    "steps": [
+      {
+        "start_cell": 1,
+        "files": [
+          "data/c-2.pdf",
+          "data/c-1.pdf"
+        ]
+      },
+      {
+        "start_cell": 3,
+        "files": [
+          "data/c-3.pdf"
+        ]
+      }
+    ],
+    "template": "T32-fwd-3x3"
+  },
+  {
+    "case": "T32-09",
+    "steps": [
+      {
+        "start_cell": 10,
+        "files": [
+          "data/c-10.pdf",
+          "data/c-3.pdf",
+          "data/c-11.pdf",
+          "data/c-1.pdf",
+          "data/c-2.pdf"
+        ]
+      }
+    ],
+    "template": "T32-fwd-3x3"
+  },
+  {
+    "case": "T32-10",
+    "steps": [
+      {
+        "start_cell": 3,
+        "files": [
+          "data/c-10.pdf",
+          "data/c-3.pdf",
+          "data/c-11.pdf",
+          "data/c-1.pdf",
+          "data/c-2.pdf"
+        ]
+      }
+    ],
+    "template": "T32-back-rev-3x8"
+  },
+  {
+    "case": "T32-11",
+    "steps": [
+      {
+        "start_cell": 1,
+        "files": [
+          "data/c-10.pdf",
+          "data/c-3.pdf",
+          "data/c-11.pdf",
+          "data/c-1.pdf",
+          "data/c-2.pdf",
+          "data/c-99.pdf"
+        ]
+      }
+    ],
+    "template": "T32-fwd-3x3"
+  }
+]

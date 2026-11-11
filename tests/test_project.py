@@ -368,3 +368,54 @@ def test_template_saved_without_fixture_envelope(tmp_path):
     saved = json.loads((target / "template.json").read_text())
     assert saved == envelope["template"]
     assert "source_base" not in saved and "template" not in saved
+
+
+def test_two_named_outputs_and_repeat_preserves_bytes(prepared, tmp_path):
+    root, path, _ = prepared
+    folder = tmp_path / "outputs"
+    for name in ("a", "b"):
+        output = folder / f"{name}.pdf"
+        report = generate(path, root, output)
+        assert report["status"] == "PASS"
+        assert json.loads(output.with_suffix(".report.json").read_text()) == report
+    expected = {
+        f"{name}{suffix}"
+        for name in ("a", "b")
+        for suffix in (".pdf", ".qiproj.json", ".png", ".report.json")
+    }
+    assert {p.name for p in folder.iterdir()} == expected
+    before = {p.name: p.read_bytes() for p in folder.iterdir()}
+    with pytest.raises(FileExistsError):
+        generate(path, root, folder / "a.pdf")
+    assert {p.name: p.read_bytes() for p in folder.iterdir()} == before
+
+
+@pytest.mark.parametrize("suffix", [".pdf", ".qiproj.json", ".png", ".report.json"])
+def test_each_named_artifact_blocks_generation(prepared, tmp_path, suffix):
+    root, path, _ = prepared
+    folder = tmp_path / "outputs"
+    folder.mkdir()
+    existing = folder / f"front-01{suffix}"
+    existing.write_bytes(b"existing artifact")
+    with pytest.raises(FileExistsError):
+        generate(path, root, folder / "front-01.pdf")
+    assert list(folder.iterdir()) == [existing]
+    assert existing.read_bytes() == b"existing artifact"
+
+
+def test_error_reports_use_output_stem_and_refuse_overwrite(tmp_path):
+    folder = tmp_path / "outputs"
+    for name in ("front-01", "back.v2"):
+        output = folder / f"{name}.pdf"
+        report = generate(tmp_path / "missing.json", tmp_path / "templates", output)
+        assert report["status"] == "FAIL"
+        assert report["errors"][0]["code"] == "SCHEMA_INVALID"
+        assert json.loads(output.with_suffix(".report.json").read_text()) == report
+        assert not output.exists()
+    before = {p.name: p.read_bytes() for p in folder.iterdir()}
+    assert set(before) == {"front-01.report.json", "back.v2.report.json"}
+    with pytest.raises(FileExistsError):
+        generate(
+            tmp_path / "missing.json", tmp_path / "templates", folder / "front-01.pdf"
+        )
+    assert {p.name: p.read_bytes() for p in folder.iterdir()} == before

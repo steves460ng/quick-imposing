@@ -1,0 +1,31 @@
+{
+  "source_base": "../../input/base-front-blank.pdf",
+  "template": {
+    "schema": "quick-imposing/template@2",
+    "name": "T32-rev-3x3",
+    "base": "base.pdf",
+    "cell": {
+      "size_mm": [
+        85,
+        50
+      ],
+      "rotation_deg": -90
+    },
+    "grid": {
+      "origin_mm": [
+        24,
+        49.5
+      ],
+      "count": [
+        3,
+        3
+      ],
+      "pitch_mm": [
+        86,
+        51
+      ]
+    },
+    "fill_direction": "reverse",
+    "text_fields": []
+  }
+}
