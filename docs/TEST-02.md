@@ -1,7 +1,26 @@
 # 2차 테스트 명세: JSON 템플릿 기반 배치
 
+> **대체됨 (2026-11-11)**: 이 문서는 완료된 2차 테스트의 기록이다. 형식 `quick-imposing/template@1`과 아래 오류 규칙은 현행 구현에 적용하지 않는다. 현행 규칙은 `docs/SPEC.md` v0.6, `docs/TEMPLATE-REQUIREMENTS.md`, `docs/TASK-03-1.md` §2·§3을 따른다. 본문 중 "SPEC §…" 참조는 SPEC v0.5(커밋 `1e22e14`)의 절 번호다.
+>
+> | 이 문서 (2차) | 현행 |
+> |---|---|
+> | 템플릿 JSON 하나에 슬롯 좌표와 `data` 배정을 함께 담음 (`template@1`) | 템플릿 폴더(`template@2` + `base.pdf` 사본)와 프로젝트(`project@1`)로 분리 |
+> | 슬롯 좌표 직접 나열, 카드 85×50·`crop_anchor`·`source_box` 지정 | 시작 위치 + 개수 + 피치 + 셀 크기, 회전만 지정 |
+> | `base.safe_area_mm`, `SLOT_OUT_OF_SAFE_AREA` | 허용 영역 검사 없음. 판 바깥만 잘라냄 |
+> | `SLOT_OVERLAP` 오류 | `CELL_OVERLAP` 경고 후 진행 |
+> | `CARD_TOO_SMALL` 오류 | 경고 없이 진행 |
+> | `FILE_NOT_FOUND` 오류 (B 파일 없음) | 빈칸으로 두고 진행, `B_FILE_MISSING` 정보 |
+> | `UNKNOWN_SLOT` | `CELL_NOT_IN_TEMPLATE` |
+> | `DUPLICATE_SLOT_ASSIGNMENT`, `INVALID_CARD_PDF` | `SCHEMA_INVALID` + 사유 |
+> | `DUPLICATE_SLOT_ID`, `BASE_SIZE_MISMATCH` | 해당 없음. 셀은 자동 생성되고 판 크기는 베이스에서 읽는다 |
+> | 경로는 저장소 루트 기준 | B는 프로젝트 파일 기준, 베이스는 템플릿 폴더 사본 |
+> | 출력 `out/test02/<name>/result.pdf`, `report.json`, `preview.png` | `<이름>.pdf`·`.qiproj.json`·`.png`·`.report.json` |
+>
+> 2차 실행기는 참고 브랜치 `test/test02-templates`에만 있고 main에는 없다. `samples/templates/t2-*`와 `samples/expected/t2-*`는 이 기록의 픽스처로만 남아 있다.
+
 | 항목 | 내용 |
 |---|---|
+| 상태 | **대체됨 (2026-11-11)**. 기록용 |
 | 문서 버전 | v0.2 (Illustrator 전용 데이터 제거 검증 추가) |
 | 작성일 | 2026-11-10 |
 | 선행 문서 | `docs/SPEC.md` (v0.5). 이 문서에 없는 규칙은 모두 SPEC을 따른다 |
