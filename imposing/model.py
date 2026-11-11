@@ -65,7 +65,10 @@ def template_errors(t, folder=None):
         "cell.rotation_deg",
     )
     require(pair(g.get("origin_mm")), "grid.origin_mm")
-    require(pair(g.get("pitch_mm")), "grid.pitch_mm")
+    require(
+        pair(g.get("pitch_mm")) and all(v >= 0 for v in g["pitch_mm"]),
+        "grid.pitch_mm",
+    )
     require(
         isinstance(g.get("count"), list)
         and len(g["count"]) == 2

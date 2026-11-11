@@ -14,17 +14,19 @@ python -m venv .venv
 python -m pip install -e '.[test]'
 ```
 
-한글 픽스처는 시스템에 설치된 **Noto Sans CJK KR Regular**를 사용합니다. 운영체제 글꼴 폴더에서 이름으로 찾으며, `--font-dir <폴더>`를 반복 지정해 추가 폴더를 검색할 수 있습니다. 다른 글꼴로 조용히 대체하지 않습니다. TrueType와 CID-keyed CFF를 서브셋 임베드하며 ToUnicode를 포함합니다. 글꼴 임베드 권한이나 글리프가 없으면 오류를 보고합니다.
+한글 픽스처는 시스템에 설치된 **Noto Sans CJK KR Regular**를 사용합니다. 운영체제 글꼴 폴더에서 이름으로 찾으며, `--font-dir <폴더>`를 반복 지정해 추가 폴더를 검색할 수 있습니다. 이름이 nameID 1·4·6에 정확히 일치하는 글꼴을 nameID 16 별칭보다 우선하며, 같은 우선순위에서는 nameID 17(없으면 2)의 Regular 스타일을 선택합니다. 다른 글꼴로 조용히 대체하지 않습니다. TrueType와 CID-keyed CFF를 서브셋 임베드하며 ToUnicode를 포함합니다. 글꼴 임베드 권한이나 글리프가 없으면 오류를 보고합니다.
 
 ## 템플릿 만들기
 
 ```sh
-quick-imposing create-template samples/test03-1/template-defs/T31-front-3x8.json \
+quick-imposing create-template template.json \
   --base samples/input/base-front-blank.pdf \
   --templates-root out/my-templates
 ```
 
-`out/my-templates/T31-front-3x8/`에 `template.json`과 원본과 바이트가 같은 `base.pdf`를 만듭니다. 기존 템플릿 폴더를 덮어쓰지 않습니다. 일반 입력은 `template@2` JSON입니다. 테스트용 정의 파일은 `template`과 원본 위치 `source_base`를 가진 외부 래퍼이며, 템플릿 폴더에 저장하는 JSON에는 이 래퍼가 들어가지 않습니다.
+먼저 TASK-03-1 §2.1 형식으로 `template.json`을 준비합니다(`name`이 `T31-front-3x8`인 예). 명령은 `out/my-templates/T31-front-3x8/`에 `template.json`과 원본과 바이트가 같은 `base.pdf`를 만듭니다. 기존 템플릿 폴더를 덮어쓰지 않습니다.
+
+`samples/test03-1/template-defs/`의 `{source_base, template}` 래퍼는 **테스트 실행기 전용**입니다. `template@2`의 일부가 아니며 일반 생성 CLI의 입력도 아닙니다. 실행기는 내부 `template`만 생성 함수에 전달하므로 저장된 `template.json`에 `source_base`나 원본 베이스 경로가 남지 않습니다. 샘플로 CLI를 실행하려면 실행기가 만든 `out/test03-1/templates/T31-front-3x8/template.json`을 입력으로 사용할 수 있습니다.
 
 ## 프로젝트로 PDF 생성
 
@@ -38,7 +40,9 @@ quick-imposing build samples/test03-1/projects/T31-01.qiproj.json \
 
 - 셀 번호는 행 우선으로 고정합니다. `fill_direction`은 형식만 검사합니다.
 - 그리는 순서는 베이스 → `order` 오름차순의 B → 텍스트입니다.
+- 피치는 0 이상이어야 합니다. 음수는 `SCHEMA_INVALID`이고 0으로 셀이 겹치면 `CELL_OVERLAP` 경고 후 진행합니다.
 - 겹침은 경고 후 진행합니다. 판 경계는 B 좌표계의 Form BBox로 잘라냅니다.
+- 완전히 판 밖인 셀은 `drawn=false`, `bbox=null`로 기록하고 경고 없이 그리기를 생략합니다. 프로젝트에는 셀·파일·order를 유지하며 템플릿 수정 후 다시 열면 그립니다.
 - B 크기 차이는 경고하지 않습니다. 없는 B와 알 수 없는 텍스트 id는 리포트 정보에만 기록합니다.
 - 빈 텍스트는 그리지 않습니다. 좌표는 첫 글자의 왼쪽 기준선입니다.
 - 기존 PDF·프로젝트·리포트·미리보기가 있으면 덮어쓰지 않습니다. 새 출력 폴더를 선택하세요.

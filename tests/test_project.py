@@ -294,3 +294,77 @@ def test_same_pdf_path_alias_does_not_duplicate_resources(prepared, tmp_path):
         ]
         assert first.Resources.objgen == second.Resources.objgen
         assert len(doc.Root.OCProperties.OCGs) == 5  # four base OCGs plus one B
+
+
+@pytest.mark.parametrize("pitch", [[-1, 51], [86, -1]])
+def test_negative_pitch_rejected(prepared, tmp_path, pitch):
+    root, path, pr = prepared
+    tf = root / pr["template"] / "template.json"
+    t = json.loads(tf.read_text())
+    t["grid"]["pitch_mm"] = pitch
+    tf.write_text(json.dumps(t))
+    r = generate(path, root, tmp_path / "out/result.pdf")
+    assert r["status"] == "FAIL"
+    assert r["errors"] == [dict(code="SCHEMA_INVALID", field="grid.pitch_mm")]
+    assert not (tmp_path / "out/result.pdf").exists()
+
+
+def test_zero_pitch_warns_and_draws(prepared, tmp_path):
+    root, path, pr = prepared
+    tf = root / pr["template"] / "template.json"
+    t = json.loads(tf.read_text())
+    t["grid"].update(count=[2, 1], pitch_mm=[0, 0])
+    tf.write_text(json.dumps(t))
+    pr["placements"] = pr["placements"][:2]
+    pr["texts"] = {}
+    path.write_text(json.dumps(pr))
+    r = generate(path, root, tmp_path / "out/result.pdf")
+    assert r["status"] == "PASS" and not r["errors"]
+    assert r["warnings"] == [dict(code="CELL_OVERLAP", cells=[[1, 2]])]
+    assert all(item["drawn"] for item in r["placements"])
+    assert r["placements"][0]["cm"] == r["placements"][1]["cm"]
+
+
+def test_fully_offpage_retains_assignment_and_reopens(prepared, tmp_path):
+    root, path, pr = prepared
+    tf = root / pr["template"] / "template.json"
+    t = json.loads(tf.read_text())
+    t["grid"].update(count=[1, 1], origin_mm=[400, 600])
+    tf.write_text(json.dumps(t))
+    pr["placements"] = pr["placements"][:1]
+    pr["texts"] = {}
+    path.write_text(json.dumps(pr))
+    first = tmp_path / "offpage/result.pdf"
+    r = generate(path, root, first)
+    assert r["status"] == "PASS" and not r["warnings"]
+    assert r["placements"][0]["drawn"] is False and r["placements"][0]["bbox"] is None
+    assert r["empty_cells"] == []
+    saved = first.with_suffix(".qiproj.json")
+    kept = json.loads(saved.read_text())
+    assert len(kept["placements"]) == 1 and kept["placements"][0]["cell"] == 1
+    assert kept["placements"][0]["order"] == pr["placements"][0]["order"]
+    assert (saved.parent / kept["placements"][0]["file"]).resolve() == (
+        path.parent / pr["placements"][0]["file"]
+    ).resolve()
+    with p.open(first) as pdf:
+        assert not any(
+            str(op) == "Do"
+            for args, op in p.parse_content_stream(streams(pdf.pages[0])[-1])
+        )
+    t["grid"]["origin_mm"] = [24, 49.5]
+    tf.write_text(json.dumps(t))
+    r = generate(saved, root, tmp_path / "reopened/result.pdf")
+    assert r["status"] == "PASS" and not r["warnings"]
+    assert (
+        r["placements"][0]["drawn"] is True and r["placements"][0]["bbox"] is not None
+    )
+
+
+def test_template_saved_without_fixture_envelope(tmp_path):
+    envelope = json.loads((FIXTURES / "template-defs/T31-front-3x8.json").read_text())
+    target = create_template(
+        envelope["template"], ROOT / "samples/input/base-front-blank.pdf", tmp_path
+    )
+    saved = json.loads((target / "template.json").read_text())
+    assert saved == envelope["template"]
+    assert "source_base" not in saved and "template" not in saved

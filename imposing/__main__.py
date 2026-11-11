@@ -22,10 +22,9 @@ def main():
     try:
         if args.command == "create-template":
             definition = json.loads(args.definition.read_text(encoding="utf-8"))
-            # Fixture envelopes hold source provenance outside the versioned definition.
             print(
                 create_template(
-                    definition.get("template", definition),
+                    definition,
                     args.base,
                     args.templates_root,
                 )

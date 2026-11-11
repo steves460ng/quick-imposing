@@ -53,18 +53,30 @@ def catalogue(extra):
                 else:
                     fonts = [TTFont(path, lazy=True)]
                 for index, font in enumerate(fonts):
-                    names = {
+                    exact_names = {
                         n.toUnicode().casefold()
                         for n in font["name"].names
-                        if n.nameID in (1, 4, 6, 16)
+                        if n.nameID in (1, 4, 6)
                     }
-                    regular = (font["name"].getDebugName(2) or "").casefold() in (
+                    family_names = {
+                        n.toUnicode().casefold()
+                        for n in font["name"].names
+                        if n.nameID == 16
+                    }
+                    # Legacy subfamily (2) may say Regular for a face whose
+                    # typographic subfamily (17) is Black, Bold, etc.
+                    style = font["name"].getDebugName(17)
+                    if style is None:
+                        style = font["name"].getDebugName(2)
+                    regular = (style or "").strip().casefold() in (
                         "regular",
                         "normal",
                         "book",
                     )
-                    for name in names:
-                        rank = 0 if regular else 1
+                    for name in exact_names | family_names:
+                        # An explicitly named face wins over a family alias,
+                        # even if the alias belongs to a Regular face.
+                        rank = (name not in exact_names, not regular)
                         if name not in found or rank < ranks[name]:
                             found[name] = (str(path), index)
                             ranks[name] = rank

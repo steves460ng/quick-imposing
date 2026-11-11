@@ -447,6 +447,16 @@ def validate_case(case, project_file, root, output, report, expected):
         fonts = font_rows(output)
         before = font_rows(base)
         added = list((Counter(fonts) - Counter(before)).elements())
+        text_fonts = {entry["font_resource"] for entry in report["texts"]}
+        postscript_names = sorted(
+            str(pg.Resources.Font[key].BaseFont).lstrip("/").split("+", 1)[-1]
+            for key in text_fonts
+        )
+        check(
+            "C7.font_postscript_name",
+            postscript_names == sorted(expected["text_font_postscript_names"]),
+            postscript_names,
+        )
         check(
             "V3/C7.fonts",
             len(added) == len({f["font"] for f in active})
@@ -503,6 +513,20 @@ def run_suite(out, font_dirs=()):
         try:
             report = generate(project, root, output, font_dirs)
             checks = validate_case(name, project, root, output, report, expected)
+            if name == "T31-09" and output.exists():
+                with (
+                    p.open(out / "T31-01/result.pdf") as first,
+                    p.open(output) as extra,
+                ):
+                    checks.append(
+                        dict(
+                            id="unknown_text_has_no_effect",
+                            passed=[s.read_bytes() for s in streams(first.pages[0])]
+                            == [s.read_bytes() for s in streams(extra.pages[0])]
+                            and canonical(first.pages[0].Resources)
+                            == canonical(extra.pages[0].Resources),
+                        )
+                    )
             if name == "T31-08" and output.exists():
                 saved = output.with_suffix(".qiproj.json")
                 data = json.loads(saved.read_text())

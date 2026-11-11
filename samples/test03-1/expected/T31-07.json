@@ -7,5 +7,6 @@
   "info_codes": [],
   "error_codes": [
     "CELL_NOT_IN_TEMPLATE"
-  ]
+  ],
+  "text_font_postscript_names": []
 }

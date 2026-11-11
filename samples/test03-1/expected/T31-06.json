@@ -7,5 +7,6 @@
   "info_codes": [
     "B_FILE_MISSING"
   ],
-  "error_codes": []
+  "error_codes": [],
+  "text_font_postscript_names": []
 }
