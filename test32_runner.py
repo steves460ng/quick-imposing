@@ -217,6 +217,7 @@ def run_case(case, expected, out, templates):
     pdf = out / "pdf/result.pdf"
     generated = generate(output, templates, pdf)
     check("D5.build", generated["status"] == "PASS", generated["errors"])
+    check("named_build_report", load(pdf.with_suffix(".report.json")) == generated)
     if pdf.exists():
         definition = load(templates / result["template"] / "template.json")
         inspect_pdf(
