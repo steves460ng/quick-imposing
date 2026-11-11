@@ -1,0 +1,11 @@
+{
+  "case": "T31-09",
+  "expect": "pass",
+  "tolerance_pt": 0.01,
+  "constants": [],
+  "warning_codes": [],
+  "info_codes": [
+    "TEXT_FIELD_UNKNOWN"
+  ],
+  "error_codes": []
+}

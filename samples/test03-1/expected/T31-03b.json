@@ -1,0 +1,28 @@
+{
+  "case": "T31-03b",
+  "expect": "pass",
+  "tolerance_pt": 0.01,
+  "constants": [
+    {
+      "cell": 1,
+      "file": "B-1.pdf",
+      "cm": [
+        -1,
+        0,
+        0,
+        -1,
+        204.074,
+        1216.115
+      ],
+      "bbox": [
+        -0.021,
+        0.053,
+        147.381,
+        246.667
+      ]
+    }
+  ],
+  "warning_codes": [],
+  "info_codes": [],
+  "error_codes": []
+}

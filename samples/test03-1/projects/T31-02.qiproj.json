@@ -1,0 +1,26 @@
+{
+  "schema": "quick-imposing/project@1",
+  "template": "T31-back-3x8",
+  "texts": {
+    "product": "BC-COMBI",
+    "team": "1팀",
+    "date": ""
+  },
+  "placements": [
+    {
+      "cell": 1,
+      "file": "../../input/B-3.pdf",
+      "order": 1
+    },
+    {
+      "cell": 2,
+      "file": "../../input/B-2.pdf",
+      "order": 2
+    },
+    {
+      "cell": 3,
+      "file": "../../input/B-1.pdf",
+      "order": 3
+    }
+  ]
+}

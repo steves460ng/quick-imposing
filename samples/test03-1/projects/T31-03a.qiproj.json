@@ -1,0 +1,17 @@
+{
+  "schema": "quick-imposing/project@1",
+  "template": "T31-rot0-5x4",
+  "texts": {},
+  "placements": [
+    {
+      "cell": 1,
+      "file": "../../input/B-1.pdf",
+      "order": 1
+    },
+    {
+      "cell": 20,
+      "file": "../../input/B-2.pdf",
+      "order": 2
+    }
+  ]
+}

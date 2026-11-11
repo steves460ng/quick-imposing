@@ -1,0 +1,31 @@
+{
+  "source_base": "../../input/base-front-blank.pdf",
+  "template": {
+    "schema": "quick-imposing/template@2",
+    "name": "T31-rot180-5x4",
+    "base": "base.pdf",
+    "cell": {
+      "size_mm": [
+        52,
+        87
+      ],
+      "rotation_deg": 180
+    },
+    "grid": {
+      "origin_mm": [
+        20,
+        77
+      ],
+      "count": [
+        5,
+        4
+      ],
+      "pitch_mm": [
+        53,
+        88
+      ]
+    },
+    "fill_direction": "forward",
+    "text_fields": []
+  }
+}

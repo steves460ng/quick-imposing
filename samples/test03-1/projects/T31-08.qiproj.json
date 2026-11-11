@@ -1,0 +1,131 @@
+{
+  "schema": "quick-imposing/project@1",
+  "template": "T31-front-3x8",
+  "texts": {
+    "product": "BC-COMBI",
+    "team": "1팀",
+    "date": "2026.11.11"
+  },
+  "placements": [
+    {
+      "cell": 1,
+      "file": "../../input/B-1.pdf",
+      "order": 1
+    },
+    {
+      "cell": 2,
+      "file": "../../input/B-2.pdf",
+      "order": 2
+    },
+    {
+      "cell": 3,
+      "file": "../../input/B-3.pdf",
+      "order": 3
+    },
+    {
+      "cell": 4,
+      "file": "../../input/B-1.pdf",
+      "order": 4
+    },
+    {
+      "cell": 5,
+      "file": "../../input/B-2.pdf",
+      "order": 5
+    },
+    {
+      "cell": 6,
+      "file": "../../input/B-3.pdf",
+      "order": 6
+    },
+    {
+      "cell": 7,
+      "file": "../../input/B-1.pdf",
+      "order": 7
+    },
+    {
+      "cell": 8,
+      "file": "../../input/B-2.pdf",
+      "order": 8
+    },
+    {
+      "cell": 9,
+      "file": "../../input/B-3.pdf",
+      "order": 9
+    },
+    {
+      "cell": 10,
+      "file": "../../input/B-1.pdf",
+      "order": 10
+    },
+    {
+      "cell": 11,
+      "file": "../../input/B-2.pdf",
+      "order": 11
+    },
+    {
+      "cell": 12,
+      "file": "../../input/B-3.pdf",
+      "order": 12
+    },
+    {
+      "cell": 13,
+      "file": "../../input/B-1.pdf",
+      "order": 13
+    },
+    {
+      "cell": 14,
+      "file": "../../input/B-2.pdf",
+      "order": 14
+    },
+    {
+      "cell": 15,
+      "file": "../../input/B-3.pdf",
+      "order": 15
+    },
+    {
+      "cell": 16,
+      "file": "../../input/B-1.pdf",
+      "order": 16
+    },
+    {
+      "cell": 17,
+      "file": "../../input/B-2.pdf",
+      "order": 17
+    },
+    {
+      "cell": 18,
+      "file": "../../input/B-3.pdf",
+      "order": 18
+    },
+    {
+      "cell": 19,
+      "file": "../../input/B-1.pdf",
+      "order": 19
+    },
+    {
+      "cell": 20,
+      "file": "../../input/B-2.pdf",
+      "order": 20
+    },
+    {
+      "cell": 21,
+      "file": "../../input/B-3.pdf",
+      "order": 21
+    },
+    {
+      "cell": 22,
+      "file": "../../input/B-1.pdf",
+      "order": 22
+    },
+    {
+      "cell": 23,
+      "file": "../../input/B-2.pdf",
+      "order": 23
+    },
+    {
+      "cell": 24,
+      "file": "../../input/B-3.pdf",
+      "order": 24
+    }
+  ]
+}

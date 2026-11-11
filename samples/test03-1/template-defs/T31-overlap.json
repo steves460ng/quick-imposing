@@ -1,0 +1,31 @@
+{
+  "source_base": "../../input/base-front-blank.pdf",
+  "template": {
+    "schema": "quick-imposing/template@2",
+    "name": "T31-overlap",
+    "base": "base.pdf",
+    "cell": {
+      "size_mm": [
+        85,
+        50
+      ],
+      "rotation_deg": -90
+    },
+    "grid": {
+      "origin_mm": [
+        30,
+        60
+      ],
+      "count": [
+        2,
+        1
+      ],
+      "pitch_mm": [
+        80,
+        45
+      ]
+    },
+    "fill_direction": "forward",
+    "text_fields": []
+  }
+}

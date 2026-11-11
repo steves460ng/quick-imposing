@@ -1,0 +1,9 @@
+{
+  "case": "T31-08",
+  "expect": "pass",
+  "tolerance_pt": 0.01,
+  "constants": [],
+  "warning_codes": [],
+  "info_codes": [],
+  "error_codes": []
+}

@@ -1,0 +1,11 @@
+{
+  "case": "T31-06",
+  "expect": "pass",
+  "tolerance_pt": 0.01,
+  "constants": [],
+  "warning_codes": [],
+  "info_codes": [
+    "B_FILE_MISSING"
+  ],
+  "error_codes": []
+}
