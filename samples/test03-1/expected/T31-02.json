@@ -1,0 +1,31 @@
+{
+  "case": "T31-02",
+  "expect": "pass",
+  "tolerance_pt": 0.01,
+  "constants": [
+    {
+      "cell": 1,
+      "file": "B-3.pdf",
+      "cm": [
+        0,
+        1,
+        -1,
+        0,
+        311.864,
+        1149.469
+      ],
+      "bbox": [
+        2.814,
+        2.888,
+        144.546,
+        243.832
+      ]
+    }
+  ],
+  "warning_codes": [],
+  "info_codes": [],
+  "error_codes": [],
+  "text_font_postscript_names": [
+    "NotoSansCJKkr-Regular"
+  ]
+}

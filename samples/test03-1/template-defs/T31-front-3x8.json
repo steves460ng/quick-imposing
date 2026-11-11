@@ -1,0 +1,53 @@
+{
+  "source_base": "../../input/base-front-blank.pdf",
+  "template": {
+    "schema": "quick-imposing/template@2",
+    "name": "T31-front-3x8",
+    "base": "base.pdf",
+    "cell": {
+      "size_mm": [
+        85,
+        50
+      ],
+      "rotation_deg": -90
+    },
+    "grid": {
+      "origin_mm": [
+        24,
+        49.5
+      ],
+      "count": [
+        3,
+        8
+      ],
+      "pitch_mm": [
+        86,
+        51
+      ]
+    },
+    "fill_direction": "forward",
+    "text_fields": [
+      {
+        "id": "product",
+        "x_mm": 35,
+        "y_mm": 14,
+        "font": "Noto Sans CJK KR",
+        "size_pt": 9
+      },
+      {
+        "id": "team",
+        "x_mm": 100,
+        "y_mm": 14,
+        "font": "Noto Sans CJK KR",
+        "size_pt": 9
+      },
+      {
+        "id": "date",
+        "x_mm": 230,
+        "y_mm": 14,
+        "font": "Noto Sans CJK KR",
+        "size_pt": 9
+      }
+    ]
+  }
+}

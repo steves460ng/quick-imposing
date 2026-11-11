@@ -1,0 +1,22 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "quick-imposing"
+version = "0.3.1"
+description = "Vector-preserving PDF imposition with template and project files"
+requires-python = ">=3.12"
+dependencies = ["pikepdf==10.18.0", "Pillow==13.0.0", "fonttools==4.68.0"]
+
+[project.optional-dependencies]
+test = ["pytest==9.2.0"]
+
+[project.scripts]
+quick-imposing = "imposing.__main__:main"
+
+[tool.setuptools.packages.find]
+include = ["imposing*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

@@ -1,0 +1,17 @@
+{
+  "schema": "quick-imposing/project@1",
+  "template": "T31-overlap",
+  "texts": {},
+  "placements": [
+    {
+      "cell": 1,
+      "file": "../../input/B-1.pdf",
+      "order": 2
+    },
+    {
+      "cell": 2,
+      "file": "../../input/B-2.pdf",
+      "order": 1
+    }
+  ]
+}
