@@ -326,6 +326,7 @@ quick-imposing/
 │  ├─ TEMPLATE-REQUIREMENTS.md   ← 템플릿·프로젝트 요구사항
 │  ├─ TASK-*.md, TEST-*-RESULTS.md ← 단계별 작업 지시서와 결과
 │  ├─ TEST-02.md                 ← 2차 테스트 명세 (대체됨, 기록용)
+│  ├─ CLI-TEST-GUIDE.md          ← 명령행 도구 직접 테스트 가이드
 │  └─ HANDOFF-*.md               ← 세션 인계 기록
 ├─ PR/                           ← 변경 제안·검토 기록 (PR/README.md)
 ├─ imposing/                     ← 배치 엔진과 명령행 도구
@@ -338,6 +339,7 @@ quick-imposing/
 │  │  ├─ base-back-blank.pdf     ← 3-1차부터, 후면 빈 베이스
 │  │  └─ B-1.pdf ~ B-3.pdf
 │  ├─ test03-1/, test03-2/       ← 단계별 픽스처와 기대값
+│  ├─ manual/                    ← 수동 테스트용 템플릿 정의 (docs/CLI-TEST-GUIDE.md)
 │  ├─ templates/, expected/      ← 2차 테스트 픽스처 (template@1, 기록용)
 └─ out/                          ← 실행 결과 (커밋하지 않음)
 ```
