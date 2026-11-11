@@ -2,6 +2,7 @@ import argparse
 import json
 from pathlib import Path
 from .engine import create_template, generate
+from .autofill import autofill
 
 
 def main():
@@ -18,6 +19,15 @@ def main():
     build.add_argument("--templates-root", type=Path, required=True)
     build.add_argument("--output", type=Path, required=True)
     build.add_argument("--font-dir", action="append", default=[])
+    fill = commands.add_parser("autofill", help="Append files to a new project copy")
+    source = fill.add_mutually_exclusive_group(required=True)
+    source.add_argument("--project", type=Path)
+    source.add_argument("--template")
+    fill.add_argument("--templates-root", type=Path, required=True)
+    fill.add_argument("--start-cell", type=int, required=True)
+    fill.add_argument("--files", nargs="*", type=Path, default=[])
+    fill.add_argument("--output", type=Path, required=True)
+    fill.add_argument("--report", type=Path)
     args = parser.parse_args()
     try:
         if args.command == "create-template":
@@ -30,7 +40,20 @@ def main():
                 )
             )
             return 0
-        report = generate(args.project, args.templates_root, args.output, args.font_dir)
+        if args.command == "autofill":
+            report = autofill(
+                templates_root=args.templates_root,
+                start_cell=args.start_cell,
+                files=args.files,
+                output=args.output,
+                project=args.project,
+                template=args.template,
+                report_path=args.report,
+            )
+        else:
+            report = generate(
+                args.project, args.templates_root, args.output, args.font_dir
+            )
         print(
             json.dumps(
                 {

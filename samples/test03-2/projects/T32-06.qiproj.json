@@ -1,0 +1,12 @@
+{
+  "schema": "quick-imposing/project@1",
+  "template": "T32-fwd-3x3",
+  "texts": {},
+  "placements": [
+    {
+      "cell": 4,
+      "file": "../../input/B-3.pdf",
+      "order": 1
+    }
+  ]
+}
