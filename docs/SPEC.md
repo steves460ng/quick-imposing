@@ -2,7 +2,7 @@
 
 | 항목 | 내용 |
 |---|---|
-| 문서 버전 | v0.6 (템플릿·프로젝트 요구사항 반영, 대체된 1차 프리셋 규칙 정리) |
+| 문서 버전 | v0.6.1 (템플릿·프로젝트 요구사항 반영, 대체된 1차 프리셋 규칙 정리, V1 경고 처리 보완) |
 | 작성일 | 2026-11-10 (v0.6: 2026-11-11) |
 | 대상 | 구현 에이전트(Codex) 및 검수자 |
 | 관련 문서 | `docs/TEMPLATE-REQUIREMENTS.md` (요구사항), `docs/TASK-03-1.md` §2·§3 (파일 형식·처리 규칙), `docs/TASK-03-2.md` (자동 배열) |
@@ -204,7 +204,7 @@ y = origin_y + (r−1) × pitch_y
 | 템플릿을 찾을 수 없음 | 오류 | `TEMPLATE_NOT_FOUND` |
 | 텍스트 글꼴을 찾을 수 없음 | 오류 | `FONT_NOT_FOUND` |
 | 형식 오류, 필수 키 누락, 허용되지 않은 값, `order` 중복, 한 셀에 배정 2개 이상, 음수 피치, 열 수 없거나 1페이지가 아닌 PDF | 오류 | `SCHEMA_INVALID` + 사유 |
-| 생성 후 자체 검사 실패 (`qpdf --check` 오류, 입력 파일 해시 변경) | 오류 | `PDF_VALIDATION_FAILED`, `INPUT_CHANGED` |
+| 생성 후 자체 검사 실패 (`qpdf --check` 오류(종료 코드 2), 입력 파일 해시 변경) | 오류 | `PDF_VALIDATION_FAILED`, `INPUT_CHANGED` |
 | 셀끼리 겹침 | 경고 후 진행 | `CELL_OVERLAP` (경고) |
 | B 크기가 셀과 다름 | 경고 없이 진행 | — |
 | 셀이 마크 영역에 걸침 | 경고 없이 진행. 검사하지 않음 | — |
@@ -277,7 +277,7 @@ v0.5까지의 1차 테스트 케이스(TC1~TC12, 프리셋 기반)와 2차 테�
 
 | ID | 검증 | 기준 |
 |---|---|---|
-| V1 | `qpdf --check` | 오류 없음 |
+| V1 | `qpdf --check` | 오류 없음(종료 코드 0 또는 3). 경고만 있는 경우(종료 코드 3)는 통과로 보고 경고 문구를 리포트에 기록한다. qpdf 12는 샘플 베이스의 압축 스트림에 경고를 내며, 베이스는 바이트 그대로 보존하므로(R3) 결과에도 같은 경고가 나온다 |
 | V2 | 페이지 수, 크기 | 1페이지, MediaBox가 베이스와 동일 |
 | V3 | 폰트 목록 (`pdffonts`) | 베이스의 폰트와 텍스트 항목에 쓴 글꼴만 존재(모두 emb=yes). B에서 폰트가 새로 생기지 않음 |
 | V4 | 이미지 목록 (`pdfimages -list`) | 베이스 이미지 + 배치된 B 파일별 이미지·SMask. 새로 생긴 이미지 없음, 이미지 크기·bpc·색 공간 동일 |
@@ -327,9 +327,12 @@ quick-imposing/
 │  ├─ TASK-*.md, TEST-*-RESULTS.md ← 단계별 작업 지시서와 결과
 │  ├─ TEST-02.md                 ← 2차 테스트 명세 (대체됨, 기록용)
 │  ├─ CLI-TEST-GUIDE.md          ← 명령행 도구 직접 테스트 가이드
+│  ├─ UI-DESIGN.md, USER-GUIDE.md ← GUI 구성·배포 결정, 사용설명서
 │  └─ HANDOFF-*.md               ← 세션 인계 기록
 ├─ PR/                           ← 변경 제안·검토 기록 (PR/README.md)
 ├─ imposing/                     ← 배치 엔진과 명령행 도구
+│  └─ gui/                       ← 템플릿 편집기와 작업 프로그램 (docs/UI-DESIGN.md)
+├─ packaging/, .github/workflows/ ← 배포 폴더 빌드와 Windows 검증
 ├─ tests/                        ← pytest
 ├─ test03_runner.py, test32_runner.py ← 3-1차·3-2차 테스트 실행기
 ├─ samples/
@@ -377,6 +380,7 @@ quick-imposing/
 |---|---|---|
 | v0.5 | 2026-11-10 | Illustrator 전용 편집 데이터 제거(R11)를 필수 요구사항으로 추가 |
 | v0.6 | 2026-11-11 | `docs/TEMPLATE-REQUIREMENTS.md` v0.3과 3-1차·3-2차 구현 결과에 맞춰 개정. 아래 규칙을 대체했다 |
+| v0.6.1 | 2026-11-12 | V1 기준 보완: `qpdf --check`의 경고(종료 코드 3)는 통과로 보고 리포트에 기록한다. 저장소 구조에 GUI·배포 구성 추가 |
 
 v0.6에서 대체한 규칙과 현행 규칙:
 

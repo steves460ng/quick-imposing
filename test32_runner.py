@@ -10,6 +10,7 @@ import pikepdf as p
 from imposing.autofill import autofill
 from imposing.engine import create_template, generate
 from imposing.model import relative_path
+from imposing.pdf import check as qpdf_check
 from imposing.pdf import canonical, digest, invoke, render, streams
 from test03_runner import close, independent_geometry, pixel_difference, specimen
 from test03_runner import run_suite as run_31
@@ -51,7 +52,7 @@ def inspect_pdf(output, expected, definition, base, check):
     ):
         temp = Path(temp)
         page = pdf.pages[0]
-        check("qpdf", bool(invoke("qpdf", "--check", output)))
+        check("qpdf", qpdf_check(output) is not None)
         original_contents = streams(original.pages[0])
         contents = streams(page)
         check(

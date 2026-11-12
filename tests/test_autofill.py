@@ -64,7 +64,7 @@ def test_natural_sort(tmp_path):
         ]
     ]
     assert [
-        str(p.relative_to(tmp_path)) for p in sorted(paths, key=natural_file_key)
+        p.relative_to(tmp_path).as_posix() for p in sorted(paths, key=natural_file_key)
     ] == [
         "a/2.pdf",
         "a/c-2.ai",

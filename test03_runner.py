@@ -12,6 +12,7 @@ import pikepdf as p
 from PIL import Image, ImageChops, ImageDraw
 
 from imposing.engine import create_template, generate
+from imposing.pdf import check as qpdf_check
 from imposing.pdf import canonical, digest, invoke, render, save, streams
 
 ROOT = Path(__file__).resolve().parent
@@ -206,7 +207,7 @@ def validate_case(case, project_file, root, output, report, expected):
         bp = original.pages[0]
         original_contents = streams(bp)
         contents = streams(pg)
-        check("V1", bool(invoke("qpdf", "--check", output)))
+        check("V1", qpdf_check(output) is not None)
         check("V2", len(pdf.pages) == 1 and list(pg.MediaBox) == list(bp.MediaBox))
         check(
             "V7",

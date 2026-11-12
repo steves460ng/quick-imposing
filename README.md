@@ -1,6 +1,6 @@
 # quick-imposing
 
-템플릿의 셀 배열에 PDF 카드를 배치하고, 작업별 텍스트를 K100으로 추가합니다. 기존 PDF의 콘텐츠·이미지·폰트 스트림을 재해석하거나 래스터화하지 않습니다. PDF 생성 기준은 [TASK-03-1](docs/TASK-03-1.md), 자동 배열 기준은 [TASK-03-2](docs/TASK-03-2.md)입니다. GUI는 포함하지 않습니다.
+템플릿의 셀 배열에 PDF 카드를 배치하고, 작업별 텍스트를 K100으로 추가합니다. 기존 PDF의 콘텐츠·이미지·폰트 스트림을 재해석하거나 래스터화하지 않습니다. PDF 생성 기준은 [TASK-03-1](docs/TASK-03-1.md), 자동 배열 기준은 [TASK-03-2](docs/TASK-03-2.md)입니다. Windows용 GUI 프로그램 두 개(템플릿 편집기, 작업 프로그램)와 명령행 도구를 제공합니다.
 
 ## 설치
 
@@ -15,6 +15,19 @@ python -m pip install -e '.[test]'
 ```
 
 한글 픽스처는 시스템에 설치된 **Noto Sans CJK KR Regular**를 사용합니다. 운영체제 글꼴 폴더에서 이름으로 찾으며, `--font-dir <폴더>`를 반복 지정해 추가 폴더를 검색할 수 있습니다. 이름이 nameID 1·4·6에 정확히 일치하는 글꼴을 nameID 16 별칭보다 우선하며, 같은 우선순위에서는 nameID 17(없으면 2)의 Regular 스타일을 선택합니다. 다른 글꼴로 조용히 대체하지 않습니다. TrueType와 CID-keyed CFF를 서브셋 임베드하며 ToUnicode를 포함합니다. 글꼴 임베드 권한이나 글리프가 없으면 오류를 보고합니다.
+
+## GUI 프로그램
+
+```sh
+python -m pip install -e '.[test,gui]'
+quick-imposing-editor   # 템플릿 편집기
+quick-imposing-work     # 작업 프로그램
+```
+
+- 사용법은 [사용설명서](docs/USER-GUIDE.md), 화면 구성과 결정 근거는 [UI-DESIGN](docs/UI-DESIGN.md)에 있습니다.
+- 템플릿 폴더는 Windows에서 `%LOCALAPPDATA%\QuickImposing\templates`, 그 밖에서는 `~/.local/share/quick-imposing/templates`입니다. 환경 변수 `QUICK_IMPOSING_TEMPLATES`로 바꿀 수 있습니다.
+- 배포 폴더는 `pyinstaller packaging/quick-imposing.spec --noconfirm`으로 만듭니다. Windows 빌드와 Windows 테스트는 GitHub Actions `windows` 워크플로(`.github/workflows/windows.yml`)가 수행하며, 결과 폴더를 `QuickImposing-windows` 아티팩트로 올립니다. qpdf·Poppler는 배포 폴더의 `bin/`에 넣습니다.
+- GUI는 `imposing/store.py`(템플릿 폴더 관리)와 `imposing/session.py`(작업 편집 상태)를 거쳐 아래 명령행 도구와 같은 엔진을 호출합니다.
 
 ## 템플릿 만들기
 
@@ -81,7 +94,7 @@ quick-imposing build out/autofill/second.qiproj.json \
 ## 테스트
 
 ```sh
-python -m pytest -q
+python -m pytest -q          # GUI 테스트는 PySide6가 없으면 건너뜁니다
 python test03_runner.py
 python test32_runner.py
 # 기본 출력 폴더가 이미 있다면 새 폴더 사용
