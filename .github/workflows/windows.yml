@@ -106,11 +106,12 @@ jobs:
         if: always()
         shell: pwsh
         run: |
+          # 빌드할 때 PATH의 다른 프로그램 DLL이 섞여 들어가지 않게 한다.
+          $saved = $env:PATH
+          $env:PATH = "$env:pythonLocation;$env:pythonLocation\Scripts;$env:SystemRoot\System32;$env:SystemRoot"
           pyinstaller packaging/quick-imposing.spec --noconfirm --log-level WARN
+          $env:PATH = $saved
           Copy-Item bin dist\QuickImposing\bin -Recurse
-          Get-ChildItem dist\QuickImposing\_internal -Recurse -Include "msvcp140*.dll", "vcruntime140*.dll" | ForEach-Object { "$($_.FullName.Substring($PWD.Path.Length))  $($_.VersionInfo.FileVersion)" }
-          Get-ChildItem "$env:pythonLocation\Lib\site-packages\PySide6" -Include "msvcp140*.dll", "vcruntime140*.dll" -Recurse | ForEach-Object { "PySide6: $($_.Name)  $($_.VersionInfo.FileVersion)" }
-          Get-ChildItem "$env:SystemRoot\System32" -Filter "msvcp140.dll" | ForEach-Object { "System32: $($_.Name)  $($_.VersionInfo.FileVersion)" }
           Copy-Item docs\USER-GUIDE.md dist\QuickImposing\사용설명서.md
 
       - name: 배포본 시작 점검

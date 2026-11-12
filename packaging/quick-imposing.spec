@@ -13,7 +13,8 @@ EXCLUDES = ["tkinter", "pytest", "numpy"]
 def analysis(script):
     return Analysis(
         [str(ROOT / "packaging" / script)],
-        pathex=[str(ROOT)],
+        pathex=[str(ROOT), str(ROOT / "packaging")],
+        hiddenimports=["imposing.gui.work", "imposing.gui.editor"],
         excludes=EXCLUDES,
     )
 
