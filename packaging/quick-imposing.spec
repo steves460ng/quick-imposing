@@ -19,26 +19,34 @@ def analysis(script):
 
 
 def prefer_qt_runtime(a):
-    """Bundle the Visual C++ runtime that ships with PySide6.
+    """Bundle one matching Visual C++ runtime: the set shipped with PySide6.
 
-    Several packages bring their own MSVCP140/VCRUNTIME140 copies and
-    PyInstaller keeps one per file name. With an older copy Qt fails to load
-    ("DLL load failed while importing QtCore: The specified procedure could
-    not be found"), so the copies PySide6 was built and shipped with win.
+    The runtime DLLs must come from the same release. A bundle that mixes
+    them (VCRUNTIME140 from one place, MSVCP140 from another or from the
+    system) fails with "DLL load failed while importing QtCore: The specified
+    procedure could not be found". Every runtime DLL PySide6 ships is placed
+    at the top level, replacing copies collected from elsewhere.
     """
     import PySide6
 
     qt = Path(PySide6.__file__).parent
     prefixes = ("msvcp140", "vcruntime140", "concrt140")
-    binaries = []
-    for dest, source, kind in a.binaries:
-        name = Path(dest).name
-        if name.lower().startswith(prefixes):
-            if Path(dest).parent != Path("."):
-                continue  # keep a single copy at the top level
-            if (qt / name).is_file():
-                source = str(qt / name)
-        binaries.append((dest, source, kind))
+    shipped = {
+        f.name.lower(): f
+        for f in qt.glob("*.dll")
+        if f.name.lower().startswith(prefixes)
+    }
+    if not shipped:
+        return a  # not a Windows wheel
+    binaries = [
+        entry
+        for entry in a.binaries
+        if not (
+            Path(entry[0]).parent == Path(".")
+            and Path(entry[0]).name.lower().startswith(prefixes)
+        )
+    ]
+    binaries += [(f.name, str(f), "BINARY") for f in shipped.values()]
     a.binaries[:] = binaries
     return a
 

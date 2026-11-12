@@ -60,7 +60,11 @@ jobs:
           pdftoppm -v
 
       - name: pytest
-        run: python -m pytest -q --tb=short --basetemp=out/pytest-tmp  # 저장소와 같은 드라이브(B 상대경로 조건)
+        shell: pwsh
+        run: |
+          # 임시 폴더를 저장소와 같은 드라이브에 둔다(B는 프로젝트 기준 상대경로).
+          New-Item -ItemType Directory -Force out | Out-Null
+          python -m pytest -q --tb=short --basetemp=out/pytest-tmp
 
       - name: 3-1차·3-2차 실행기
         if: always()
