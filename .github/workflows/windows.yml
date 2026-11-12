@@ -60,7 +60,7 @@ jobs:
           pdftoppm -v
 
       - name: pytest
-        run: python -m pytest -q
+        run: python -m pytest -q --tb=short
 
       - name: 3-1차·3-2차 실행기
         if: always()
@@ -84,7 +84,7 @@ jobs:
         if: always()
         shell: pwsh
         run: |
-          pyinstaller packaging/quick-imposing.spec --noconfirm
+          pyinstaller packaging/quick-imposing.spec --noconfirm --log-level WARN
           Copy-Item bin dist\QuickImposing\bin -Recurse
           Copy-Item docs\USER-GUIDE.md dist\QuickImposing\사용설명서.md
 
