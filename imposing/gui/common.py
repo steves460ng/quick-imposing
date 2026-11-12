@@ -77,6 +77,11 @@ def self_test(window_class):
     import tempfile
     import traceback
 
+    import faulthandler
+
+    # If start-up hangs, leave the stack in a file and exit instead.
+    hang_log = open("selftest-hang.txt", "w", encoding="utf-8")
+    faulthandler.dump_traceback_later(45, exit=True, file=hang_log)
     try:
         os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
         create_application("selftest")
@@ -88,8 +93,12 @@ def self_test(window_class):
             window.show()
             QApplication.processEvents()
             window.close()
+        faulthandler.cancel_dump_traceback_later()
+        hang_log.close()
+        Path("selftest-hang.txt").unlink(missing_ok=True)
         return 0
     except Exception:
+        faulthandler.cancel_dump_traceback_later()
         # A windowed program has no console; leave the reason in a file.
         Path("selftest-error.txt").write_text(traceback.format_exc(), encoding="utf-8")
         return 2

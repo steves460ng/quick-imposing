@@ -55,7 +55,7 @@ def save(pdf, path):
     )
 
 
-def invoke(name, *args, cwd=None, input=None, binary=False):
+def invoke(name, *args, cwd=None, input=None, binary=False, accept=(0,)):
     executable = shutil.which(name)
     if not executable:
         raise RuntimeError(f"Required executable not on PATH: {name}")
@@ -68,15 +68,27 @@ def invoke(name, *args, cwd=None, input=None, binary=False):
         # A windowed Windows program must not flash a console per tool call.
         creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0),
     )
-    if result.returncode:
+    if result.returncode not in accept:
         raise RuntimeError(f"{name}: {result.stdout}{result.stderr}")
+    if len(accept) > 1:
+        return result
     return result.stdout
 
 
 def check(path):
-    """Run ``qpdf --check`` from the file's folder so only its name is passed."""
+    """Run ``qpdf --check``; return its warning lines, raise on errors.
+
+    qpdf exits with 0 (clean), 3 (warnings only) or 2 (errors). Warnings do
+    not fail a build: qpdf 12 warns about deflate streams of Illustrator/Quark
+    base files, which are kept byte for byte (SPEC R3) and so reappear in the
+    result. The command runs in the file's folder so only its name is passed.
+    """
     path = Path(path)
-    return invoke("qpdf", "--check", path.name, cwd=path.parent)
+    result = invoke("qpdf", "--check", path.name, cwd=path.parent, accept=(0, 3))
+    if result.returncode == 0:
+        return []
+    lines = f"{result.stdout}\n{result.stderr}".splitlines()
+    return [line.strip() for line in lines if line.startswith("WARNING")]
 
 
 def render(path, target, dpi=150):

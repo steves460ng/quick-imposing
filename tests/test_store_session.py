@@ -205,3 +205,37 @@ def test_failed_save_leaves_nothing(root, tmp_path):
     assert report["errors"][0]["code"] == "FONT_NOT_FOUND"
     assert list((tmp_path / "out").iterdir()) == []
     assert session.dirty is False or session.project_path is None
+
+
+def test_qpdf_warnings_do_not_fail_a_build(root, tmp_path, monkeypatch):
+    """qpdf 12 exits with 3 for warnings inherited from the base PDF."""
+    import subprocess
+
+    from imposing import pdf
+
+    real = subprocess.run
+    code = {"value": 3}
+
+    def run(command, **kwargs):
+        if Path(command[0]).stem.lower() == "qpdf":
+            return subprocess.CompletedProcess(
+                command,
+                code["value"],
+                "checking result.pdf\nWARNING: result.pdf (offset 1): input stream "
+                "is complete but output may still be valid\n",
+                "qpdf: operation succeeded with warnings\n",
+            )
+        return real(command, **kwargs)
+
+    monkeypatch.setattr(pdf.subprocess, "run", run)
+    session = Session.new(root, "T31-front-3x8")
+    session.fill(1, cards(1))
+    report = session.save(tmp_path / "w" / "a.pdf")
+    assert report["status"] == "PASS"
+    assert len(report["checks"][0]["qpdf_warnings"]) == 1
+    code["value"] = 2
+    session.dirty = True
+    report = session.save(tmp_path / "w" / "b.pdf")
+    assert report["status"] == "FAIL"
+    assert report["errors"][0]["code"] == "PDF_VALIDATION_FAILED"
+    assert not (tmp_path / "w" / "b.pdf").exists()

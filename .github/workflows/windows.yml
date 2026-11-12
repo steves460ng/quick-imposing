@@ -64,9 +64,14 @@ jobs:
 
       - name: 3-1차·3-2차 실행기
         if: always()
+        shell: pwsh
         run: |
-          python test03_runner.py --out out/ci-test03-1
-          python test32_runner.py --out out/ci-test03-2
+          python test03_runner.py --out out/ci-test03-1 > out-test03-1.log
+          $a = $LASTEXITCODE
+          python test32_runner.py --out out/ci-test03-2 > out-test03-2.log
+          $b = $LASTEXITCODE
+          python -c "import json; [print(n, {k: s[k] for k in ('status', 'passed', 'case_count') if k in s}, [(c['case'], [f['id'] if isinstance(f, dict) else str(f)[:200] for f in c['failures']]) for c in s.get('cases', []) if c['status'] != 'PASS']) for n in ('ci-test03-1', 'ci-test03-2') for s in [json.load(open(f'out/{n}/summary.json', encoding='utf-8'))]]"
+          if ($a -ne 0 -or $b -ne 0) { exit 1 }
 
       - name: Windows 기본 글꼴(맑은 고딕)과 한글 경로
         if: always()
@@ -77,8 +82,21 @@ jobs:
           (Get-Content samples\manual\T31-front-3x8.json -Raw -Encoding utf8).Replace("Noto Sans CJK KR", "Malgun Gothic") | Set-Content "$work\malgun.json" -Encoding utf8
           python -m imposing create-template "$work\malgun.json" --base samples\input\base-front-blank.pdf --templates-root "$work\템플릿"
           python -m imposing build samples\test03-1\projects\T31-01.qiproj.json --templates-root "$work\템플릿" --output "$work\결과-01.pdf"
-          pdffonts "$work\결과-01.pdf"
-          Get-ChildItem $work
+          if ($LASTEXITCODE -ne 0) { exit 1 }
+          Copy-Item "$work\결과-01.pdf" out\malgun-check.pdf
+          pdffonts out\malgun-check.pdf
+          Get-ChildItem $work | ForEach-Object { $_.Name }
+
+      - name: GUI 시작 점검 (소스 실행)
+        if: always()
+        shell: pwsh
+        run: |
+          python -m imposing.gui.work --selftest
+          "work: $LASTEXITCODE"; $a = $LASTEXITCODE
+          python -m imposing.gui.editor --selftest
+          "editor: $LASTEXITCODE"; $b = $LASTEXITCODE
+          Get-ChildItem selftest-*.txt -ErrorAction SilentlyContinue | ForEach-Object { Get-Content $_ -Encoding utf8; Remove-Item $_ }
+          if ($a -ne 0 -or $b -ne 0) { exit 1 }
 
       - name: 배포 폴더 빌드
         if: always()
@@ -97,11 +115,11 @@ jobs:
           $env:PATH = "$env:SystemRoot\System32;$env:SystemRoot"
           foreach ($name in "QuickImposing", "QuickImposingEditor") {
             $p = Start-Process "dist\QuickImposing\$name.exe" -ArgumentList "--selftest" -PassThru
-            if (-not $p.WaitForExit(90000)) { $p.Kill(); "$name selftest: no exit within 90 s"; $failed = $true; continue }
+            if (-not $p.WaitForExit(70000)) { $p.Kill(); "$name selftest: no exit within 70 s"; $failed = $true; continue }
             "$name selftest exit code: $($p.ExitCode)"
             if ($p.ExitCode -ne 0) { $failed = $true }
           }
-          if (Test-Path selftest-error.txt) { Get-Content selftest-error.txt -Encoding utf8 }
+          Get-ChildItem selftest-*.txt -ErrorAction SilentlyContinue | ForEach-Object { $_.Name; Get-Content $_ -Encoding utf8 }
           if ($failed) { exit 1
           }
 
