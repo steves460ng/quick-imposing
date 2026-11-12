@@ -18,7 +18,7 @@
 | 1. UI 구성 | 프로그램 두 개. 작업 프로그램은 왼쪽에 1 템플릿 → 2 텍스트 → 3 B 데이터 → 4 저장 순서의 패널, 오른쪽에 판 미리보기. 템플릿 편집기는 목록 · 입력 폼 · 실시간 미리보기 3단 | 요구사항 §6.2의 작업 흐름 순서를 화면 순서로 그대로 옮겼다. 그래픽 툴 경험이 없어도 위에서 아래로 따라가면 된다 |
 | 2. 텍스트 입력칸 이름표 | 보여준다. 템플릿 텍스트 항목의 `id`를 이름표로 쓴다(예: `제품명`). 별도 `label` 키는 만들지 않는다 | 입력칸이 여러 개면 이름표 없이는 구분할 수 없다. `id`에 한글을 쓸 수 있어 형식(`template@2`)을 바꾸지 않아도 된다 |
 | 3. 겹침 경고 위치 | 편집기: 값을 바꾸는 즉시 폼 안에 노란 안내(저장은 막지 않음). 작업 프로그램: 템플릿을 불러올 때 미리보기 위에 안내 한 줄을 계속 표시. 저장할 때 다시 묻지 않는다 | "경고 후 진행" 규칙을 지키되, 의도한 겹침 배열을 쓰는 작업자를 매번 대화상자로 막지 않는다 |
-| 6. Windows 검증 | GitHub Actions `windows-latest`에서 pytest · 3-1차 · 3-2차 실행기 · 맑은 고딕 · 한글 경로 · 배포본 시작 점검을 돌린다(`.github/workflows/windows.yml`) | 검증 환경이 Linux뿐이었다. 사람 손 없이 반복할 수 있는 Windows 검증이 필요하다. 실제 PC에서의 확인은 `docs/CLI-TEST-GUIDE.md`와 사용설명서로 한다 |
+| 6. Windows 검증 | GitHub Actions `windows-latest`에서 pytest · 3-1차 · 3-2차 실행기 · 맑은 고딕 · 한글 경로 · 배포본 시작 점검을 돌린다(`.github/workflows/windows.yml`). 2026-11-12 run #9에서 전부 통과했다(결과와 그 과정에서 찾은 결함은 `PR/004-gui.md`) | 검증 환경이 Linux뿐이었다. 사람 손 없이 반복할 수 있는 Windows 검증이 필요하다. 실제 PC에서의 확인은 `docs/CLI-TEST-GUIDE.md`와 사용설명서로 한다 |
 | 7. 배포 형태 | 설치 프로그램 없이 **압축을 푸는 폴더 하나**. Python 런타임, qpdf, Poppler를 폴더에 포함한다. 템플릿 폴더는 `%LOCALAPPDATA%\QuickImposing\templates`이며 첫 실행 때 만든다 | 작업 PC에 Python이나 PATH 설정을 요구하지 않는다. 템플릿은 "설치할 때 만들어지는 별도 폴더, 공유하지 않음"(요구사항 §4)에 맞춰 사용자별 폴더에 둔다 |
 | GUI 기술 | Python + PySide6(Qt 6) | 배치 엔진을 그대로 호출한다. 파일 끌어다 놓기, 확대·축소 미리보기, 한글 입력이 기본 제공된다 |
 
@@ -84,7 +84,7 @@ QuickImposing\
 └─ 사용설명서.md
 ```
 
-- 빌드: `pyinstaller packaging/quick-imposing.spec`. Windows 빌드는 GitHub Actions `windows` 워크플로가 만들고 `QuickImposing-windows` 아티팩트로 올린다.
+- 빌드: `pyinstaller packaging/quick-imposing.spec`. PATH에 다른 프로그램의 DLL 폴더가 있으면 배포본에 섞여 들어가 실행되지 않을 수 있으므로, 워크플로처럼 PATH를 좁힌 상태에서 빌드한다. Windows 빌드는 GitHub Actions `windows` 워크플로가 만들고 `QuickImposing-windows` 아티팩트로 올린다.
 - 템플릿 폴더는 환경 변수 `QUICK_IMPOSING_TEMPLATES`로 바꿀 수 있다(테스트 · 특수 배치용).
 - 프로그램은 시작할 때 `bin\` 폴더를 먼저 찾으므로 PC에 qpdf · Poppler를 따로 설치하지 않아도 된다.
 
@@ -96,6 +96,7 @@ QuickImposing\
 |---|---|
 | `autofill.plan_fill` 분리 | 명령행 자동 배열과 작업 프로그램이 같은 채움 · 막힘 로직을 쓰게 했다 |
 | 외부 도구 실행 시 콘솔 창 숨김(`CREATE_NO_WINDOW`) | 창 프로그램에서 qpdf · pdftoppm을 부를 때마다 검은 창이 깜빡이는 것을 막는다 |
+| `qpdf --check` 경고(종료 코드 3)를 통과로 처리하고 리포트에 기록 | qpdf 12가 샘플 베이스의 압축 스트림에 경고를 내 모든 생성이 실패했다(SPEC v0.6.1 V1) |
 | `qpdf --check`와 미리보기 렌더링을 임시 폴더 안에서 파일 이름만으로 실행 | 한글 저장 경로가 도구의 명령행에 들어가지 않게 한다 |
 | `imposing/store.py`, `imposing/session.py` 추가 | 템플릿 폴더 관리(생성 · 수정 · 복제 · 삭제)와 작업 중 편집 상태. 화면 없이 테스트할 수 있게 GUI와 분리했다 |
 
