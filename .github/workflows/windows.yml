@@ -112,7 +112,8 @@ jobs:
         shell: pwsh
         run: |
           # 시스템 PATH의 qpdf·Poppler 없이 배포 폴더만으로 뜨는지 본다.
-          $env:PATH = "$env:SystemRoot\System32;$env:SystemRoot"
+          $env:PATH = ($env:PATH -split ";" | Where-Object { $_ -and $_ -notlike "*\bin\qpdf" -and $_ -notlike "*\bin\poppler" }) -join ";"
+          if (Get-Command qpdf -ErrorAction SilentlyContinue) { "qpdf is still on PATH"; exit 1 }
           foreach ($name in "QuickImposing", "QuickImposingEditor") {
             $p = Start-Process "dist\QuickImposing\$name.exe" -ArgumentList "--selftest" -PassThru
             if (-not $p.WaitForExit(70000)) { $p.Kill(); "$name selftest: no exit within 70 s"; $failed = $true; continue }
