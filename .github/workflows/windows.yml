@@ -90,6 +90,7 @@ jobs:
 
       - name: 배포본 시작 점검
         if: always()
+        timeout-minutes: 5
         shell: pwsh
         run: |
           # 시스템 PATH의 qpdf·Poppler 없이 배포 폴더만으로 뜨는지 본다.
