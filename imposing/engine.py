@@ -13,7 +13,7 @@ import pikepdf as p
 
 from . import fonts
 from .model import cells, overlap_pairs, template_errors, project_errors
-from .pdf import MM, digest, streams, remove_illustrator, save, render, invoke
+from .pdf import MM, digest, streams, remove_illustrator, save, render, check
 
 
 def create_template(definition, base, root):
@@ -337,7 +337,7 @@ def generate(project_file, templates_root, output, font_dirs=()):
             result = tmp / "result.pdf"
             save(dest, result)
             try:
-                invoke("qpdf", "--check", result)
+                check(result)
             except RuntimeError as exc:
                 fail("PDF_VALIDATION_FAILED", reason=str(exc))
                 return finish()

@@ -55,19 +55,47 @@ def save(pdf, path):
     )
 
 
-def invoke(name, *args):
+def invoke(name, *args, cwd=None, input=None, binary=False):
     executable = shutil.which(name)
     if not executable:
         raise RuntimeError(f"Required executable not on PATH: {name}")
     result = subprocess.run(
-        [executable, *map(str, args)], capture_output=True, text=True
+        [executable, *map(str, args)],
+        capture_output=True,
+        text=not binary,
+        cwd=cwd,
+        input=input,
+        # A windowed Windows program must not flash a console per tool call.
+        creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0),
     )
     if result.returncode:
         raise RuntimeError(f"{name}: {result.stdout}{result.stderr}")
     return result.stdout
 
 
+def check(path):
+    """Run ``qpdf --check`` from the file's folder so only its name is passed."""
+    path = Path(path)
+    return invoke("qpdf", "--check", path.name, cwd=path.parent)
+
+
 def render(path, target, dpi=150):
-    invoke("pdftoppm", "-singlefile", "-r", dpi, "-png", path, target)
+    path, target = Path(path), Path(target)
+    if path.parent == target.parent:
+        # Staged files have ASCII names; running inside their folder keeps
+        # non-ASCII output folders out of the tool's command line.
+        invoke(
+            "pdftoppm", "-singlefile", "-r", dpi, "-png", path.name, target.name,
+            cwd=path.parent,
+        )
+    else:
+        invoke("pdftoppm", "-singlefile", "-r", dpi, "-png", path, target)
     with Image.open(str(target) + ".png") as image:
         return image.convert("RGB")
+
+
+def render_bytes(data, dpi):
+    """Render page 1 of in-memory PDF bytes to PNG bytes (no file paths)."""
+    return invoke(
+        "pdftoppm", "-singlefile", "-r", dpi, "-png", "-", input=data, binary=True
+    )

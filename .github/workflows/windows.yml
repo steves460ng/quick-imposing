@@ -1,0 +1,114 @@
+name: windows
+
+# Windows 검증(테스트)과 배포 폴더 빌드. 수동 실행하거나 작업 브랜치에 push하면 돈다.
+on:
+  workflow_dispatch:
+  push:
+    branches: ["ccr-**", "release/**"]
+    paths: ["imposing/**", "tests/**", "packaging/**", "*.py", "pyproject.toml", ".github/workflows/windows.yml"]
+
+permissions:
+  contents: read
+
+jobs:
+  windows:
+    runs-on: windows-latest
+    timeout-minutes: 40
+    env:
+      GH_TOKEN: ${{ github.token }}
+      PYTHONUTF8: "1"
+      QT_QPA_PLATFORM: offscreen
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: qpdf, Poppler 내려받기
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory tools, bin\qpdf, bin\poppler | Out-Null
+          gh release download --repo qpdf/qpdf --pattern "*-msvc64.zip" --dir tools
+          gh release download --repo oschwartz10612/poppler-windows --pattern "Release-*.zip" --dir tools
+          Get-ChildItem tools\*.zip | ForEach-Object { Expand-Archive $_.FullName -DestinationPath "tools\$($_.BaseName)" }
+          $qpdf = (Get-ChildItem tools -Recurse -Filter qpdf.exe | Select-Object -First 1).Directory
+          $poppler = (Get-ChildItem tools -Recurse -Filter pdftoppm.exe | Select-Object -First 1).Directory
+          Copy-Item "$($qpdf.FullName)\*" bin\qpdf -Recurse
+          Copy-Item "$($poppler.FullName)\*" bin\poppler -Recurse
+          "$PWD\bin\qpdf", "$PWD\bin\poppler" | Out-File -FilePath $env:GITHUB_PATH -Append -Encoding utf8
+          Get-ChildItem tools\*.zip | ForEach-Object { $_.Name }
+
+      - name: 테스트용 글꼴 (Noto Sans CJK KR)
+        shell: pwsh
+        run: |
+          $fonts = "$env:LOCALAPPDATA\Microsoft\Windows\Fonts"
+          New-Item -ItemType Directory -Force $fonts | Out-Null
+          Invoke-WebRequest "https://github.com/notofonts/noto-cjk/raw/main/Sans/OTF/Korean/NotoSansCJKkr-Regular.otf" -OutFile "$fonts\NotoSansCJKkr-Regular.otf"
+
+      - name: 설치
+        run: python -m pip install -e ".[test,gui]" pyinstaller
+
+      - name: 도구 버전
+        shell: pwsh
+        run: |
+          python --version
+          qpdf --version
+          pdftoppm -v
+
+      - name: pytest
+        run: python -m pytest -q
+
+      - name: 3-1차·3-2차 실행기
+        if: always()
+        run: |
+          python test03_runner.py --out out/ci-test03-1
+          python test32_runner.py --out out/ci-test03-2
+
+      - name: Windows 기본 글꼴(맑은 고딕)과 한글 경로
+        if: always()
+        shell: pwsh
+        run: |
+          $work = "out\한글 폴더"
+          New-Item -ItemType Directory -Force $work | Out-Null
+          (Get-Content samples\manual\T31-front-3x8.json -Raw -Encoding utf8).Replace("Noto Sans CJK KR", "Malgun Gothic") | Set-Content "$work\malgun.json" -Encoding utf8
+          python -m imposing create-template "$work\malgun.json" --base samples\input\base-front-blank.pdf --templates-root "$work\템플릿"
+          python -m imposing build samples\test03-1\projects\T31-01.qiproj.json --templates-root "$work\템플릿" --output "$work\결과-01.pdf"
+          pdffonts "$work\결과-01.pdf"
+          Get-ChildItem $work
+
+      - name: 배포 폴더 빌드
+        if: always()
+        shell: pwsh
+        run: |
+          pyinstaller packaging/quick-imposing.spec --noconfirm
+          Copy-Item bin dist\QuickImposing\bin -Recurse
+          Copy-Item docs\USER-GUIDE.md dist\QuickImposing\사용설명서.md
+
+      - name: 배포본 시작 점검
+        if: always()
+        shell: pwsh
+        run: |
+          # 시스템 PATH의 qpdf·Poppler 없이 배포 폴더만으로 뜨는지 본다.
+          $env:PATH = "$env:SystemRoot\System32;$env:SystemRoot"
+          foreach ($name in "QuickImposing", "QuickImposingEditor") {
+            $p = Start-Process "dist\QuickImposing\$name.exe" -ArgumentList "--selftest" -Wait -PassThru
+            "$name selftest exit code: $($p.ExitCode)"
+            if ($p.ExitCode -ne 0) { exit 1 }
+          }
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: QuickImposing-windows
+          path: dist/QuickImposing
+          retention-days: 14
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: test-output
+          path: |
+            out/ci-test03-1/summary.json
+            out/ci-test03-2/summary.json
+            out/한글 폴더
+          retention-days: 14

@@ -33,6 +33,30 @@ def fill_sequence(count, direction):
             yield row * columns + col + 1
 
 
+def plan_fill(count, direction, occupied, start_cell, wanted):
+    """Return (cells, reason, blocked_cell) for filling up to ``wanted`` cells.
+
+    Filling starts at ``start_cell`` and follows the template direction. It
+    stops in front of an occupied cell ("occupied") or after the last cell
+    ("end_of_cells"); ``reason`` is None when every file found a cell.
+    """
+    sequence = iter(fill_sequence(count, direction))
+    for cell in sequence:
+        if cell == start_cell:
+            break
+    else:
+        raise ValueError(f"Start cell is not in the template: {start_cell}")
+    assigned = []
+    while len(assigned) < wanted:
+        if cell is None:
+            return assigned, "end_of_cells", None
+        if cell in occupied:
+            return assigned, "occupied", cell
+        assigned.append(cell)
+        cell = next(sequence, None)
+    return assigned, None, None
+
+
 def autofill(
     *,
     templates_root,
@@ -174,31 +198,29 @@ def autofill(
     except ValueError as exc:  # e.g. no relative path between Windows drives
         error("SCHEMA_INVALID", str(exc))
         return finish()
-    sequence = iter(
-        fill_sequence(definition["grid"]["count"], definition["fill_direction"])
-    )
-    for cell in sequence:
-        if cell == start_cell:
-            break
     occupied = {item["cell"] for item in data["placements"]}
     next_order = max((item["order"] for item in data["placements"]), default=0) + 1
-    for index, (path, relative) in enumerate(zip(selected, rebased)):
-        if cell is None or cell in occupied:
-            reason = "end_of_cells" if cell is None else "occupied"
-            result["warnings"].append(
-                dict(
-                    code="AUTOFILL_BLOCKED",
-                    reason=reason,
-                    blocked_cell=cell,
-                    unplaced_files=[str(p) for p in selected[index:]],
-                )
-            )
-            break
+    assigned, reason, blocked_cell = plan_fill(
+        definition["grid"]["count"],
+        definition["fill_direction"],
+        occupied,
+        start_cell,
+        len(selected),
+    )
+    for cell, relative in zip(assigned, rebased):
         added = dict(cell=cell, file=relative, order=next_order)
         revised["placements"].append(added)
         result["added"].append(copy.deepcopy(added))
         next_order += 1
-        cell = next(sequence, None)
+    if reason:
+        result["warnings"].append(
+            dict(
+                code="AUTOFILL_BLOCKED",
+                reason=reason,
+                blocked_cell=blocked_cell,
+                unplaced_files=[str(p) for p in selected[len(assigned) :]],
+            )
+        )
     result["unplaced_files"] = [str(path) for path in selected[len(result["added"]) :]]
     output.parent.mkdir(parents=True, exist_ok=True)
     try:

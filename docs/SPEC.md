@@ -327,9 +327,12 @@ quick-imposing/
 │  ├─ TASK-*.md, TEST-*-RESULTS.md ← 단계별 작업 지시서와 결과
 │  ├─ TEST-02.md                 ← 2차 테스트 명세 (대체됨, 기록용)
 │  ├─ CLI-TEST-GUIDE.md          ← 명령행 도구 직접 테스트 가이드
+│  ├─ UI-DESIGN.md, USER-GUIDE.md ← GUI 구성·배포 결정, 사용설명서
 │  └─ HANDOFF-*.md               ← 세션 인계 기록
 ├─ PR/                           ← 변경 제안·검토 기록 (PR/README.md)
 ├─ imposing/                     ← 배치 엔진과 명령행 도구
+│  └─ gui/                       ← 템플릿 편집기와 작업 프로그램 (docs/UI-DESIGN.md)
+├─ packaging/, .github/workflows/ ← 배포 폴더 빌드와 Windows 검증
 ├─ tests/                        ← pytest
 ├─ test03_runner.py, test32_runner.py ← 3-1차·3-2차 테스트 실행기
 ├─ samples/
