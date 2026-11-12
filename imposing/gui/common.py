@@ -75,17 +75,24 @@ def setup_runtime():
 def self_test(window_class):
     """Start-up check for packaged builds: exit code 0 when the window builds."""
     import tempfile
+    import traceback
 
-    os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
-    create_application("selftest")
-    if [name for name in REQUIRED_TOOLS if not shutil.which(name)]:
+    try:
+        os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
+        create_application("selftest")
+        missing = [name for name in REQUIRED_TOOLS if not shutil.which(name)]
+        if missing:
+            raise RuntimeError(f"Missing tools: {missing}; PATH={os.environ['PATH']}")
+        with tempfile.TemporaryDirectory() as folder:
+            window = window_class(folder)
+            window.show()
+            QApplication.processEvents()
+            window.close()
+        return 0
+    except Exception:
+        # A windowed program has no console; leave the reason in a file.
+        Path("selftest-error.txt").write_text(traceback.format_exc(), encoding="utf-8")
         return 2
-    with tempfile.TemporaryDirectory() as folder:
-        window = window_class(folder)
-        window.show()
-        QApplication.processEvents()
-        window.close()
-    return 0
 
 
 def create_application(name):

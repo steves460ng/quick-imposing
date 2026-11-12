@@ -10,6 +10,10 @@ on:
 permissions:
   contents: read
 
+concurrency:
+  group: windows-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   windows:
     runs-on: windows-latest
@@ -91,9 +95,13 @@ jobs:
           # 시스템 PATH의 qpdf·Poppler 없이 배포 폴더만으로 뜨는지 본다.
           $env:PATH = "$env:SystemRoot\System32;$env:SystemRoot"
           foreach ($name in "QuickImposing", "QuickImposingEditor") {
-            $p = Start-Process "dist\QuickImposing\$name.exe" -ArgumentList "--selftest" -Wait -PassThru
+            $p = Start-Process "dist\QuickImposing\$name.exe" -ArgumentList "--selftest" -PassThru
+            if (-not $p.WaitForExit(90000)) { $p.Kill(); "$name selftest: no exit within 90 s"; $failed = $true; continue }
             "$name selftest exit code: $($p.ExitCode)"
-            if ($p.ExitCode -ne 0) { exit 1 }
+            if ($p.ExitCode -ne 0) { $failed = $true }
+          }
+          if (Test-Path selftest-error.txt) { Get-Content selftest-error.txt -Encoding utf8 }
+          if ($failed) { exit 1
           }
 
       - uses: actions/upload-artifact@v4
