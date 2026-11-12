@@ -260,7 +260,15 @@ def test_extra_font_directory(tmp_path):
     from fontTools.ttLib import TTFont
     from imposing.fonts import embed
 
-    path, index = resolve("DejaVu Sans")
+    # Any installed TrueType font serves as the source (Linux, then Windows).
+    for candidate in ("DejaVu Sans", "Arial"):
+        try:
+            path, index = resolve(candidate)
+            break
+        except ValueError:
+            continue
+    else:
+        pytest.skip("no TrueType source font installed")
     f = TTFont(path, fontNumber=index)
     for name in f["name"].names:
         if name.nameID in (1, 4, 6, 16):

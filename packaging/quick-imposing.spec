@@ -18,8 +18,33 @@ def analysis(script):
     )
 
 
-work = analysis("run_work.py")
-editor = analysis("run_editor.py")
+def prefer_qt_runtime(a):
+    """Bundle the Visual C++ runtime that ships with PySide6.
+
+    Several packages bring their own MSVCP140/VCRUNTIME140 copies and
+    PyInstaller keeps one per file name. With an older copy Qt fails to load
+    ("DLL load failed while importing QtCore: The specified procedure could
+    not be found"), so the copies PySide6 was built and shipped with win.
+    """
+    import PySide6
+
+    qt = Path(PySide6.__file__).parent
+    prefixes = ("msvcp140", "vcruntime140", "concrt140")
+    binaries = []
+    for dest, source, kind in a.binaries:
+        name = Path(dest).name
+        if name.lower().startswith(prefixes):
+            if Path(dest).parent != Path("."):
+                continue  # keep a single copy at the top level
+            if (qt / name).is_file():
+                source = str(qt / name)
+        binaries.append((dest, source, kind))
+    a.binaries[:] = binaries
+    return a
+
+
+work = prefer_qt_runtime(analysis("run_work.py"))
+editor = prefer_qt_runtime(analysis("run_editor.py"))
 
 
 def program(a, name):
