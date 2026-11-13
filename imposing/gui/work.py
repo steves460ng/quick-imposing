@@ -102,19 +102,19 @@ class WorkWindow(QMainWindow):
 
         self.cell_info = QLabel("")
         self.cell_info.setWordWrap(True)
-        self.load_button = QPushButton("B 불러오기…")
+        self.load_button = QPushButton("데이터 불러오기…")
         self.load_button.clicked.connect(self.load_files)
         self.remove_button = QPushButton("셀 비우기")
         self.remove_button.clicked.connect(self.remove_selected)
         self.clear_button = QPushButton("모두 비우기")
         self.clear_button.clicked.connect(self.clear_all)
         hint = QLabel(
-            "셀을 누르고 B를 불러옵니다. 파일을 여러 개 고르면 선택한 셀부터 "
+            "셀을 누르고 데이터를 불러옵니다. 파일을 여러 개 고르면 선택한 셀부터 "
             "파일 이름 순서로 채웁니다. 탐색기에서 셀로 끌어다 놓아도 됩니다."
         )
         hint.setObjectName("hint")
         hint.setWordWrap(True)
-        data_box = QGroupBox("3. B 데이터")
+        data_box = QGroupBox("3. 데이터")
         layout = QVBoxLayout(data_box)
         layout.addWidget(self.cell_info)
         layout.addWidget(self.load_button)
@@ -313,10 +313,10 @@ class WorkWindow(QMainWindow):
             return
         cell = self.view.selected
         if not cell:
-            QMessageBox.information(self, "셀을 선택하세요", "먼저 B를 넣을 셀을 누르세요.")
+            QMessageBox.information(self, "셀을 선택하세요", "먼저 데이터를 넣을 셀을 누르세요.")
             return
         paths, _ = QFileDialog.getOpenFileNames(
-            self, f"셀 {cell}부터 넣을 B 데이터 선택", self.last_folder, "PDF 파일 (*.pdf)"
+            self, f"셀 {cell}부터 넣을 데이터 선택", self.last_folder, "PDF 파일 (*.pdf)"
         )
         if paths:
             self.place_files(cell, paths)
@@ -396,7 +396,7 @@ class WorkWindow(QMainWindow):
         if not self.session or not self.session.placements:
             return
         answer = QMessageBox.question(
-            self, "모두 비우기", "모든 셀의 B 데이터를 비울까요? 텍스트는 그대로 둡니다."
+            self, "모두 비우기", "모든 셀의 데이터를 비울까요? 텍스트는 그대로 둡니다."
         )
         if answer == QMessageBox.Yes:
             self.session.clear()
@@ -445,7 +445,7 @@ class WorkWindow(QMainWindow):
             return
         if not self.session.placements:
             answer = QMessageBox.question(
-                self, "빈 판 저장", "B 데이터가 하나도 없습니다. 그대로 저장할까요?"
+                self, "빈 판 저장", "데이터가 하나도 없습니다. 그대로 저장할까요?"
             )
             if answer != QMessageBox.Yes:
                 return
@@ -558,7 +558,7 @@ class WorkWindow(QMainWindow):
             self.cell_info.setText(f"<b>셀 {cell}</b> — 비어 있음")
         if active:
             total = len(self.session.cell_positions())
-            self.count_label.setText(f"B 데이터 {len(self.session.placements)} / {total}칸")
+            self.count_label.setText(f"데이터 {len(self.session.placements)} / {total}칸")
             title = self.session.project_path.name if self.session.project_path else "새 작업"
             mark = " *" if self.session.dirty else ""
             self.setWindowTitle(f"퀵 임포징 — 작업 [{self.session.template_name}] {title}{mark}")

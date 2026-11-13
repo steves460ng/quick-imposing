@@ -189,8 +189,8 @@ class Session:
             ]
         except ValueError:
             raise SessionError(
-                "B 데이터와 저장 위치는 같은 드라이브에 있어야 합니다.\n"
-                "B 데이터가 있는 드라이브에 저장하세요.",
+                "데이터와 저장 위치는 같은 드라이브에 있어야 합니다.\n"
+                "데이터가 있는 드라이브에 저장하세요.",
                 "DIFFERENT_DRIVE",
             ) from None
         return dict(
