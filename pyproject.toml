@@ -23,5 +23,8 @@ quick-imposing-editor = "imposing.gui.editor:main"
 [tool.setuptools.packages.find]
 include = ["imposing*"]
 
+[tool.setuptools.package-data]
+"imposing.gui" = ["assets/*"]
+
 [tool.pytest.ini_options]
 testpaths = ["tests"]

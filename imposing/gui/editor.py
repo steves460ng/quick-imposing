@@ -651,7 +651,7 @@ def main():
         from .common import self_test
 
         return self_test(EditorWindow)
-    app = create_application("QuickImposingEditor")
+    app = create_application("QuickImposingEditor", "editor")
     if not tools_ready():
         return 1
     window = EditorWindow()

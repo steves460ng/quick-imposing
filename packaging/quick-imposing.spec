@@ -15,6 +15,7 @@ def analysis(script):
         [str(ROOT / "packaging" / script)],
         pathex=[str(ROOT), str(ROOT / "packaging")],
         hiddenimports=["imposing.gui.work", "imposing.gui.editor"],
+        datas=[(str(ROOT / "imposing" / "gui" / "assets"), "imposing/gui/assets")],
         excludes=EXCLUDES,
     )
 
@@ -56,21 +57,25 @@ work = prefer_qt_runtime(analysis("run_work.py"))
 editor = prefer_qt_runtime(analysis("run_editor.py"))
 
 
-def program(a, name):
+ASSETS = ROOT / "imposing" / "gui" / "assets"
+
+
+def program(a, name, icon):
     return EXE(
         PYZ(a.pure),
         a.scripts,
         exclude_binaries=True,
         name=name,
         console=False,
+        icon=str(ASSETS / f"{icon}.ico"),
     )
 
 
 COLLECT(
-    program(work, "QuickImposing"),
+    program(work, "QuickImposing", "work"),
     work.binaries,
     work.datas,
-    program(editor, "QuickImposingEditor"),
+    program(editor, "QuickImposingEditor", "editor"),
     editor.binaries,
     editor.datas,
     name="QuickImposing",

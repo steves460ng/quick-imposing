@@ -85,6 +85,7 @@ QuickImposing\
 ```
 
 - 빌드: `pyinstaller packaging/quick-imposing.spec`. PATH에 다른 프로그램의 DLL 폴더가 있으면 배포본에 섞여 들어가 실행되지 않을 수 있으므로, 워크플로처럼 PATH를 좁힌 상태에서 빌드한다. Windows 빌드는 GitHub Actions `windows` 워크플로가 만들고 `QuickImposing-windows` 아티팩트로 올린다.
+- 아이콘: 작업 프로그램은 파란 바탕에 카드가 놓인 판, 템플릿 편집기는 주황 바탕에 빈 셀과 눈금자다. `packaging/make_icons.py`가 그려서 `imposing/gui/assets/`에 저장한다(직접 그린 것이며 외부 이미지를 쓰지 않았다). 모양을 바꾸려면 스크립트를 고쳐 다시 실행한다.
 - 템플릿 폴더는 환경 변수 `QUICK_IMPOSING_TEMPLATES`로 바꿀 수 있다(테스트 · 특수 배치용).
 - 프로그램은 시작할 때 `bin\` 폴더를 먼저 찾으므로 PC에 qpdf · Poppler를 따로 설치하지 않아도 된다.
 

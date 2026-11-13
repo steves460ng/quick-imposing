@@ -199,3 +199,16 @@ def test_error_text():
     assert "셀 25" in describe_error(dict(code="CELL_NOT_IN_TEMPLATE", cell=25))
     assert "글꼴" in describe_error(dict(code="SCHEMA_INVALID", reason="Font lacks characters: [1]"))
     assert "X" in describe_error(dict(code="SCHEMA_INVALID", reason="X"))
+
+
+def test_program_icons(app):
+    from PIL import Image
+    from PySide6.QtGui import QIcon
+
+    assets = ROOT / "imposing/gui/assets"
+    for name in ("work", "editor"):
+        with Image.open(assets / f"{name}.ico") as icon:
+            assert {(16, 16), (32, 32), (48, 48), (256, 256)} <= set(icon.info["sizes"])
+        assert not QIcon(str(assets / f"{name}.png")).isNull()
+    application = create_application("test", "editor")
+    assert not application.windowIcon().isNull()

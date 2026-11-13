@@ -612,7 +612,7 @@ def main():
         from .common import self_test
 
         return self_test(WorkWindow)
-    app = create_application("QuickImposing")
+    app = create_application("QuickImposing", "work")
     if not tools_ready():
         return 1
     window = WorkWindow()
