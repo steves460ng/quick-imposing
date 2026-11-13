@@ -252,15 +252,29 @@ class SheetItem(QGraphicsItem):
         self.show_orientation = False
         self.show_field_names = False
 
-    def boundingRect(self):
+    def fit_rect(self):
+        """What the view centres and fits: the sheet, its cells and a margin.
+
+        Text fields are left out on purpose. Their position must never move
+        the sheet inside the preview; text placed off the sheet is not printed.
+        """
         rect = QRectF(0, 0, *self.size)
         if self.definition:
             w, h = self.definition["cell"]["size_mm"]
             for x, y in self.positions.values():
                 rect = rect.united(QRectF(x, y, w, h))
-            for field in self.definition["text_fields"]:
-                rect = rect.united(QRectF(field["x_mm"] - 5, field["y_mm"] - 10, 120, 15))
         return rect.adjusted(-6, -6, 6, 6)
+
+    def boundingRect(self):
+        """Everything that may be painted (a loose bound, used for redraws)."""
+        rect = self.fit_rect()
+        if self.definition:
+            for field in self.definition["text_fields"]:
+                size = field["size_pt"] / MM
+                rect = rect.united(
+                    QRectF(field["x_mm"] - 3, field["y_mm"] - 2 * size, 400, 3 * size)
+                )
+        return rect
 
     def cell_rect(self, cell):
         x, y = self.positions[cell]
@@ -459,7 +473,7 @@ class SheetView(QGraphicsView):
         item.positions = cells(definition) if definition else {}
         if item.selected not in item.positions:
             item.selected = 0
-        self.scene().setSceneRect(item.boundingRect())
+        self.scene().setSceneRect(item.fit_rect())
         item.update()
         if self.fitted:
             self.fit()
@@ -500,7 +514,7 @@ class SheetView(QGraphicsView):
 
     def fit(self):
         self.fitted = True
-        self.fitInView(self.item.boundingRect(), Qt.KeepAspectRatio)
+        self.fitInView(self.item.fit_rect(), Qt.KeepAspectRatio)
 
     def zoom(self, factor):
         self.fitted = False
