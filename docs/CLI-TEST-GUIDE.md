@@ -5,7 +5,7 @@
 | 작성일 | 2026-11-11 |
 | 대상 | 명령행 도구를 직접 실행해 확인하는 사용자 |
 | 기준 | `main` `2d84f9c` 이후. 명령은 Linux에서 실행해 결과를 확인함 |
-| 관련 문서 | `README.md` (설치·명령 사용법), `docs/SPEC.md` v0.6, `docs/TASK-03-1.md`, `docs/TASK-03-2.md` |
+| 관련 문서 | `docs/DEVELOPMENT.md` (설치·명령 사용법), `docs/SPEC.md` v0.6, `docs/TASK-03-1.md`, `docs/TASK-03-2.md` |
 
 대상 환경이 Windows이므로 PowerShell 기준으로 적었다. Windows 실행은 아직 검증되지 않았다. 이 가이드는 Windows 검증의 1차 점검으로도 쓴다(핸드오프 미결 6).
 
