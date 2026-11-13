@@ -212,3 +212,32 @@ def test_program_icons(app):
         assert not QIcon(str(assets / f"{name}.png")).isNull()
     application = create_application("test", "editor")
     assert not application.windowIcon().isNull()
+
+
+def test_text_position_does_not_move_the_sheet(app):
+    """Moving a text field must not shift the sheet inside the preview."""
+    from imposing.gui.common import SheetView
+
+    definition = json.loads((ROOT / "samples/manual/T31-front-3x8.json").read_text("utf-8"))
+    view = SheetView()
+    view.resize(520, 800)
+    view.show()
+
+    def margins(x, y=14):
+        definition["text_fields"][2]["x_mm"] = x
+        definition["text_fields"][2]["y_mm"] = y
+        view.set_sheet(BASE, definition)
+        app.processEvents()
+        left = view.mapFromScene(QPointF(0, 0))
+        right = view.mapFromScene(QPointF(305, 506))
+        return left.x(), view.viewport().width() - right.x(), left.y()
+
+    reference = margins(35)
+    assert abs(reference[0] - reference[1]) <= 1
+    for x, y in ((190, 14), (200, 14), (235, 14), (300, 14), (1, 14), (-20, 14), (35, 2), (400, -30)):
+        assert margins(x, y) == reference, (x, y)
+
+    # Cells that leave the sheet still widen the view so they stay visible.
+    definition["grid"]["origin_mm"] = [150, 49.5]
+    assert margins(35) != reference
+    view.close()
