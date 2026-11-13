@@ -105,8 +105,21 @@ if ($Test) {
 # ---------------------------------------------------------------- 4. 빌드
 Step "배포 폴더 빌드"
 $dist = "dist\QuickImposing"
+# 배포 폴더의 프로그램이 켜져 있으면 파일이 잠겨 지울 수 없다.
+$distFull = Join-Path $root $dist
+$running = Get-Process QuickImposing, QuickImposingEditor -ErrorAction SilentlyContinue |
+    Where-Object { $_.Path -and $_.Path.StartsWith($distFull, [StringComparison]::OrdinalIgnoreCase) }
+if ($running) {
+    $names = ($running | ForEach-Object { $_.ProcessName } | Sort-Object -Unique) -join ", "
+    Fail "프로그램이 실행 중입니다 ($names). 창을 모두 닫고 다시 실행하세요."
+}
 foreach ($old in "build", $dist) {
-    if (Test-Path $old) { Remove-Item $old -Recurse -Force }
+    if (-not (Test-Path $old)) { continue }
+    try {
+        Remove-Item $old -Recurse -Force
+    } catch {
+        Fail "$old 폴더를 지울 수 없습니다. 그 안의 프로그램이나 파일이 열려 있는지 확인하고 닫은 뒤 다시 실행하세요. ($($_.Exception.Message))"
+    }
 }
 $pythonDir = Split-Path -Parent $python
 $saved = $env:PATH
