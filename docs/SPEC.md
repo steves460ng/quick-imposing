@@ -243,7 +243,7 @@ y = origin_y + (r−1) × pitch_y
 
 ### 7.3 실행 인터페이스와 출력
 
-명령은 `create-template`(템플릿 생성), `build`(프로젝트로 PDF 생성), `autofill`(자동 배열)이다. 옵션과 사용법은 `README.md`에 있다.
+명령은 `create-template`(템플릿 생성), `build`(프로젝트로 PDF 생성), `autofill`(자동 배열)이다. 옵션과 사용법은 `docs/DEVELOPMENT.md`에 있다.
 
 `build`는 지정한 PDF 경로 옆에 같은 이름의 파일 4개를 저장한다.
 
@@ -327,7 +327,8 @@ quick-imposing/
 │  ├─ TASK-*.md, TEST-*-RESULTS.md ← 단계별 작업 지시서와 결과
 │  ├─ TEST-02.md                 ← 2차 테스트 명세 (대체됨, 기록용)
 │  ├─ CLI-TEST-GUIDE.md          ← 명령행 도구 직접 테스트 가이드
-│  ├─ UI-DESIGN.md, USER-GUIDE.md ← GUI 구성·배포 결정, 사용설명서
+│  ├─ UI-DESIGN.md               ← GUI 구성·배포 결정
+│  ├─ DEVELOPMENT.md             ← 소스 실행, 명령행 도구, 테스트
 │  └─ HANDOFF-*.md               ← 세션 인계 기록
 ├─ PR/                           ← 변경 제안·검토 기록 (PR/README.md)
 ├─ imposing/                     ← 배치 엔진과 명령행 도구

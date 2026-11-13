@@ -119,7 +119,12 @@ try {
     $env:PATH = $saved
 }
 Copy-Item bin (Join-Path $dist "bin") -Recurse -Force
-Copy-Item docs\USER-GUIDE.md (Join-Path $dist "사용설명서.md") -Force
+# 사용설명서 = README에서 개발 안내 앞부분까지. 그림 경로를 배포 폴더 기준으로 바꾼다.
+$guide = Get-Content README.md -Raw -Encoding UTF8
+$cut = $guide.IndexOf("<!-- 여기부터는")
+if ($cut -lt 0) { Fail "README.md에서 사용설명서 끝 표시를 찾지 못했습니다." }
+$guide = $guide.Substring(0, $cut).TrimEnd().Replace("](docs/images/", "](images/")
+Set-Content (Join-Path $dist "사용설명서.md") $guide -Encoding UTF8
 if (Test-Path docs\images) { Copy-Item docs\images (Join-Path $dist "images") -Recurse -Force }
 Set-Content (Join-Path $dist "VERSION.txt") $version -Encoding ascii
 
@@ -143,7 +148,7 @@ foreach ($name in "QuickImposing", "QuickImposingEditor") {
         $failed = $true
     }
 }
-foreach ($required in "bin\qpdf\qpdf.exe", "bin\poppler\pdftoppm.exe", "_internal\imposing\gui\assets\work.ico") {
+foreach ($required in "bin\qpdf\qpdf.exe", "bin\poppler\pdftoppm.exe", "_internal\imposing\gui\assets\work.ico", "사용설명서.md", "images\work.png") {
     if (-not (Test-Path (Join-Path $dist $required))) {
         Write-Host "  없음: $required" -ForegroundColor Red
         $failed = $true
