@@ -31,16 +31,8 @@ jobs:
       - name: qpdf, Poppler 내려받기
         shell: pwsh
         run: |
-          New-Item -ItemType Directory tools, bin\qpdf, bin\poppler | Out-Null
-          gh release download --repo qpdf/qpdf --pattern "*-msvc64.zip" --dir tools
-          gh release download --repo oschwartz10612/poppler-windows --pattern "Release-*.zip" --dir tools
-          Get-ChildItem tools\*.zip | ForEach-Object { Expand-Archive $_.FullName -DestinationPath "tools\$($_.BaseName)" }
-          $qpdf = (Get-ChildItem tools -Recurse -Filter qpdf.exe | Select-Object -First 1).Directory
-          $poppler = (Get-ChildItem tools -Recurse -Filter pdftoppm.exe | Select-Object -First 1).Directory
-          Copy-Item "$($qpdf.FullName)\*" bin\qpdf -Recurse
-          Copy-Item "$($poppler.FullName)\*" bin\poppler -Recurse
+          ./packaging/build.ps1 -ToolsOnly
           "$PWD\bin\qpdf", "$PWD\bin\poppler" | Out-File -FilePath $env:GITHUB_PATH -Append -Encoding utf8
-          Get-ChildItem tools\*.zip | ForEach-Object { $_.Name }
 
       - name: 테스트용 글꼴 (Noto Sans CJK KR)
         shell: pwsh
@@ -102,41 +94,24 @@ jobs:
           Get-ChildItem selftest-*.txt -ErrorAction SilentlyContinue | ForEach-Object { Get-Content $_ -Encoding utf8; Remove-Item $_ }
           if ($a -ne 0 -or $b -ne 0) { exit 1 }
 
-      - name: 배포 폴더 빌드
+      - name: 배포 폴더 빌드와 시작 점검 (packaging/build.ps1)
         if: always()
+        timeout-minutes: 12
         shell: pwsh
         run: |
-          # 빌드할 때 PATH의 다른 프로그램 DLL이 섞여 들어가지 않게 한다.
-          $saved = $env:PATH
-          $env:PATH = "$env:pythonLocation;$env:pythonLocation\Scripts;$env:SystemRoot\System32;$env:SystemRoot"
-          pyinstaller packaging/quick-imposing.spec --noconfirm --log-level WARN
-          $env:PATH = $saved
-          Copy-Item bin dist\QuickImposing\bin -Recurse
-          Copy-Item docs\USER-GUIDE.md dist\QuickImposing\사용설명서.md
-
-      - name: 배포본 시작 점검
-        if: always()
-        timeout-minutes: 5
-        shell: pwsh
-        run: |
-          # 시스템 PATH의 qpdf·Poppler 없이 배포 폴더만으로 뜨는지 본다.
+          # 사용자 PC에서 쓰는 스크립트를 그대로 돌린다. 시스템 PATH의 qpdf·Poppler 없이 뜨는지 본다.
           $env:PATH = ($env:PATH -split ";" | Where-Object { $_ -and $_ -notlike "*\bin\qpdf" -and $_ -notlike "*\bin\poppler" }) -join ";"
-          if (Get-Command qpdf -ErrorAction SilentlyContinue) { "qpdf is still on PATH"; exit 1 }
-          foreach ($name in "QuickImposing", "QuickImposingEditor") {
-            $p = Start-Process "dist\QuickImposing\$name.exe" -ArgumentList "--selftest" -PassThru
-            if (-not $p.WaitForExit(70000)) { $p.Kill(); "$name selftest: no exit within 70 s"; $failed = $true; continue }
-            "$name selftest exit code: $($p.ExitCode)"
-            if ($p.ExitCode -ne 0) { $failed = $true }
-          }
-          Add-Type -AssemblyName System.Drawing
-          foreach ($name in "QuickImposing", "QuickImposingEditor") {
-            $icon = [System.Drawing.Icon]::ExtractAssociatedIcon((Resolve-Path "dist\QuickImposing\$name.exe").Path)
-            "$name icon: $($icon.Width)x$($icon.Height)"
-          }
-          if (-not (Test-Path dist\QuickImposing\_internal\imposing\gui\assets\work.ico)) { "icon assets missing"; $failed = $true }
-          Get-ChildItem selftest-*.txt -ErrorAction SilentlyContinue | ForEach-Object { $_.Name; Get-Content $_ -Encoding utf8 }
-          if ($failed) { exit 1
-          }
+          ./packaging/build.ps1
+          Get-ChildItem dist | ForEach-Object { "$($_.Name)  $([math]::Round($_.Length / 1MB)) MB" }
+
+      - name: Windows PowerShell 5.1에서 스크립트 읽기
+        if: always()
+        shell: powershell
+        run: |
+          $errors = $null
+          [System.Management.Automation.Language.Parser]::ParseFile("$PWD\packaging\build.ps1", [ref]$null, [ref]$errors) | Out-Null
+          if ($errors) { $errors | ForEach-Object { $_.ToString() }; exit 1 }
+          "PowerShell $($PSVersionTable.PSVersion): 구문 오류 없음"
 
       - uses: actions/upload-artifact@v4
         if: always()

@@ -26,7 +26,8 @@ quick-imposing-work     # 작업 프로그램
 
 - 사용법은 [사용설명서](docs/USER-GUIDE.md), 화면 구성과 결정 근거는 [UI-DESIGN](docs/UI-DESIGN.md)에 있습니다.
 - 템플릿 폴더는 Windows에서 `%LOCALAPPDATA%\QuickImposing\templates`, 그 밖에서는 `~/.local/share/quick-imposing/templates`입니다. 환경 변수 `QUICK_IMPOSING_TEMPLATES`로 바꿀 수 있습니다.
-- 배포 폴더는 `pyinstaller packaging/quick-imposing.spec --noconfirm`으로 만듭니다. Windows 빌드와 Windows 테스트는 GitHub Actions `windows` 워크플로(`.github/workflows/windows.yml`)가 수행하며, 결과 폴더를 `QuickImposing-windows` 아티팩트로 올립니다. qpdf·Poppler는 배포 폴더의 `bin/`에 넣습니다.
+- Windows 배포본은 `packaging\build.ps1` 하나로 만듭니다. qpdf·Poppler 내려받기, 패키지 설치, 빌드, `bin\` 복사, 시작 점검, zip 생성까지 합니다. 결과는 `dist\QuickImposing\`과 `dist\QuickImposing-<버전>.zip`입니다. 버전은 `pyproject.toml`의 `version`입니다. 업데이트 절차는 [HANDOFF-2026-11-13](docs/HANDOFF-2026-11-13.md)에 있습니다.
+- GitHub Actions `windows` 워크플로(`.github/workflows/windows.yml`)는 Windows에서 테스트를 돌리고 같은 스크립트로 빌드해 `QuickImposing-windows` 아티팩트로 올립니다.
 - GUI는 `imposing/store.py`(템플릿 폴더 관리)와 `imposing/session.py`(작업 편집 상태)를 거쳐 아래 명령행 도구와 같은 엔진을 호출합니다.
 
 ## 템플릿 만들기
