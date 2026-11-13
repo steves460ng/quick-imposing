@@ -128,6 +128,12 @@ jobs:
             "$name selftest exit code: $($p.ExitCode)"
             if ($p.ExitCode -ne 0) { $failed = $true }
           }
+          Add-Type -AssemblyName System.Drawing
+          foreach ($name in "QuickImposing", "QuickImposingEditor") {
+            $icon = [System.Drawing.Icon]::ExtractAssociatedIcon((Resolve-Path "dist\QuickImposing\$name.exe").Path)
+            "$name icon: $($icon.Width)x$($icon.Height)"
+          }
+          if (-not (Test-Path dist\QuickImposing\_internal\imposing\gui\assets\work.ico)) { "icon assets missing"; $failed = $true }
           Get-ChildItem selftest-*.txt -ErrorAction SilentlyContinue | ForEach-Object { $_.Name; Get-Content $_ -Encoding utf8 }
           if ($failed) { exit 1
           }

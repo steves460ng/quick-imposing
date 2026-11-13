@@ -14,6 +14,7 @@ from PySide6.QtGui import (
     QFont,
     QFontDatabase,
     QFontMetricsF,
+    QIcon,
     QImage,
     QPainter,
     QPen,
@@ -104,11 +105,30 @@ def self_test(window_class):
         return 2
 
 
-def create_application(name):
+def create_application(name, icon=None):
+    """``icon`` is "work" or "editor" (files in imposing/gui/assets)."""
     setup_runtime()
+    if sys.platform == "win32" and icon:
+        # Give each program its own taskbar button and icon.
+        import ctypes
+
+        try:
+            ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(
+                f"QuickImposing.{icon}"
+            )
+        except (AttributeError, OSError):
+            pass
     app = QApplication.instance() or QApplication(sys.argv)
     app.setApplicationName(name)
     app.setStyleSheet(STYLE)
+    if icon:
+        folder = Path(__file__).resolve().parent / "assets"
+        image = QIcon()
+        for file in (folder / f"{icon}.ico", folder / f"{icon}.png"):
+            if file.is_file():
+                image.addFile(str(file))
+        if not image.isNull():
+            app.setWindowIcon(image)
     return app
 
 
