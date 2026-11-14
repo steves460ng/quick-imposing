@@ -72,6 +72,7 @@ class WorkWindow(QMainWindow):
         self.session = None
         self.thumbs = Thumbs()
         self.text_edits = {}
+        self.clipboard = []  # copied cells: paths, None for an empty cell
         self.last_folder = str(Path.home())
         self.setWindowTitle("퀵 임포징 — 작업")
         self.resize(1180, 860)
@@ -110,7 +111,8 @@ class WorkWindow(QMainWindow):
         self.clear_button.clicked.connect(self.clear_all)
         hint = QLabel(
             "셀을 누르고 데이터를 불러옵니다. 파일을 여러 개 고르면 선택한 셀부터 "
-            "파일 이름 순서로 채웁니다. 탐색기에서 셀로 끌어다 놓아도 됩니다."
+            "파일 이름 순서로 채웁니다. 탐색기에서 셀로 끌어다 놓아도 됩니다.\n"
+            "Ctrl·Shift+클릭으로 여러 셀을 고르고 Ctrl+C, Ctrl+V로 복사해 붙여넣습니다."
         )
         hint.setObjectName("hint")
         hint.setWordWrap(True)
@@ -204,6 +206,21 @@ class WorkWindow(QMainWindow):
         action.triggered.connect(self.close)
         menu.addAction(action)
 
+        menu = self.menuBar().addMenu("편집(&E)")
+        self.copy_action = QAction("셀 복사(&C)", self, shortcut=QKeySequence.Copy)
+        self.copy_action.triggered.connect(self.copy_cells)
+        menu.addAction(self.copy_action)
+        self.paste_action = QAction("셀 붙여넣기(&V)", self, shortcut=QKeySequence.Paste)
+        self.paste_action.triggered.connect(self.paste_cells)
+        menu.addAction(self.paste_action)
+        menu.addSeparator()
+        self.delete_action = QAction("선택한 셀 비우기", self, shortcut=QKeySequence.Delete)
+        self.delete_action.triggered.connect(self.remove_selected)
+        menu.addAction(self.delete_action)
+        action = QAction("모든 셀 선택(&A)", self, shortcut=QKeySequence.SelectAll)
+        action.triggered.connect(lambda: self.session and self.view.select_all())
+        menu.addAction(action)
+
         menu = self.menuBar().addMenu("도구(&T)")
         action = QAction("템플릿 편집기 열기", self)
         action.triggered.connect(self.launch_editor)
@@ -214,10 +231,6 @@ class WorkWindow(QMainWindow):
         action = QAction("템플릿 목록 새로 고침", self, shortcut=QKeySequence.Refresh)
         action.triggered.connect(self.refresh_templates)
         menu.addAction(action)
-
-        delete = QAction(self, shortcut=QKeySequence.Delete)
-        delete.triggered.connect(self.remove_selected)
-        self.addAction(delete)
 
     # -- templates --------------------------------------------------------
 
@@ -255,7 +268,7 @@ class WorkWindow(QMainWindow):
         self.session = session
         definition = session.template
         self.view.fitted = True
-        self.view.item.selected = 0
+        self.view.select(0)
         self.view.set_sheet(store.base_path(self.root, session.template_name), definition)
         self.view.set_placements(session.placements)
         self.view.set_texts(session.texts)
@@ -384,13 +397,86 @@ class WorkWindow(QMainWindow):
         )
 
     def remove_selected(self):
-        cell = self.view.selected
-        if self.session and cell in self.session.placements:
-            name = self.session.placements[cell]["path"].name
+        if not self.session:
+            return
+        cells = [c for c in self.view.selected_cells if c in self.session.placements]
+        if not cells:
+            return
+        names = [self.session.placements[cell]["path"].name for cell in cells]
+        for cell in cells:
             self.session.remove(cell)
-            self.view.set_placements(self.session.placements)
-            self.notify(f"셀 {cell}을(를) 비웠습니다 ({name}).")
-            self._update_state()
+        self.view.set_placements(self.session.placements)
+        if len(cells) == 1:
+            self.notify(f"셀 {cells[0]}을(를) 비웠습니다 ({names[0]}).")
+        else:
+            self.notify(f"셀 {len(cells)}개를 비웠습니다 ({cells[0]} … {cells[-1]}).")
+        self._update_state()
+
+    # -- copy and paste ---------------------------------------------------
+
+    def copy_cells(self):
+        """Copy the selected cells, empty ones included, in fill order."""
+        if not self.session:
+            return
+        cells = self.view.selected_cells
+        items = self.session.copy_cells(cells)
+        filled = sum(item is not None for item in items)
+        if not filled:
+            self.notify("복사하지 않았습니다. 선택한 셀에 데이터가 없습니다.")
+            return
+        self.clipboard = items
+        empty = len(items) - filled
+        detail = f"데이터 {filled}개" + (f", 빈 셀 {empty}개" if empty else "")
+        self.notify(f"셀 {len(items)}개를 복사했습니다 ({detail}).")
+        self._update_state()
+
+    def paste_cells(self):
+        """Paste the copied cells from the current cell, in fill order."""
+        if not self.session or not self.clipboard:
+            return
+        cell = self.view.selected
+        if not cell:
+            QMessageBox.information(self, "셀을 선택하세요", "먼저 붙여넣기를 시작할 셀을 누르세요.")
+            return
+        plan = self.session.plan_paste(cell, self.clipboard)
+        changed = len(plan["replaced"]) + len(plan["cleared"])
+        if changed:
+            parts = []
+            if plan["replaced"]:
+                parts.append(f"다른 데이터로 바뀌는 셀 {len(plan['replaced'])}개")
+            if plan["cleared"]:
+                parts.append(f"비워지는 셀 {len(plan['cleared'])}개")
+            answer = QMessageBox.question(
+                self,
+                "셀 붙여넣기",
+                f"붙여넣을 자리에 이미 데이터가 있는 셀이 {changed}개 있습니다.\n"
+                f"({', '.join(parts)})\n\n"
+                "기존 데이터를 지우고 붙여넣을까요? 겹침 순서는 그대로 유지됩니다.",
+            )
+            if answer != QMessageBox.Yes:
+                return
+        count = self.session.apply_paste(plan)
+        self.view.set_placements(self.session.placements)
+        last = plan["targets"][-1][0]
+        self.notify(
+            f"셀 {cell}부터 {last}까지 붙여넣었습니다 (데이터 {count}개"
+            + (f", 대체 {len(plan['replaced'])}개" if plan["replaced"] else "")
+            + (f", 비움 {len(plan['cleared'])}개" if plan["cleared"] else "")
+            + ")."
+        )
+        self._update_state()
+        if plan["unplaced"]:
+            names = [path.name for path in plan["unplaced"]]
+            shown = names[:15] + ([f"… 외 {len(names) - 15}개"] if len(names) > 15 else [])
+            self.notify(
+                f"경고 — 마지막 셀까지 채워 {len(names)}개를 붙여넣지 못했습니다: {', '.join(names)}"
+            )
+            QMessageBox.warning(
+                self,
+                "붙여넣기가 멈췄습니다",
+                "마지막 셀까지 채워 더 넣을 자리가 없습니다.\n\n"
+                f"붙여넣지 못한 데이터 {len(names)}개:\n" + "\n".join(f"· {n}" for n in shown),
+            )
 
     def clear_all(self):
         if not self.session or not self.session.placements:
@@ -539,8 +625,13 @@ class WorkWindow(QMainWindow):
             )
         cell = self.view.selected if active else 0
         placed = active and cell in self.session.placements
+        chosen = self.view.selected_cells if active else []
+        with_data = [c for c in chosen if c in self.session.placements] if active else []
         self.load_button.setEnabled(active and bool(cell))
-        self.remove_button.setEnabled(bool(placed))
+        self.remove_button.setEnabled(bool(with_data))
+        self.copy_action.setEnabled(bool(with_data))
+        self.paste_action.setEnabled(active and bool(cell) and bool(self.clipboard))
+        self.delete_action.setEnabled(bool(with_data))
         self.clear_button.setEnabled(active and bool(self.session.placements))
         self.save_button.setEnabled(active)
         if not active:
@@ -548,6 +639,11 @@ class WorkWindow(QMainWindow):
             self.count_label.setText("")
         elif not cell:
             self.cell_info.setText("선택한 셀이 없습니다. 미리보기에서 셀을 누르세요.")
+        elif len(chosen) > 1:
+            self.cell_info.setText(
+                f"<b>셀 {len(chosen)}개 선택</b> — 데이터 {len(with_data)}개<br>"
+                f"기준 셀 {cell} (불러오기·붙여넣기가 시작되는 셀)"
+            )
         elif placed:
             item = self.session.placements[cell]
             state = "" if item["path"].is_file() else " (파일 없음)"

@@ -29,6 +29,7 @@ from PySide6.QtWidgets import (
 )
 
 from .. import fonts
+from ..autofill import fill_sequence
 from ..model import cells
 from ..pdf import MM, render_bytes
 
@@ -248,7 +249,8 @@ class SheetItem(QGraphicsItem):
         self.positions = {}
         self.placements = {}
         self.texts = {}
-        self.selected = 0
+        self.selected = 0  # the current cell (target of load and paste)
+        self.selection = set()  # every selected cell, including the current one
         self.show_orientation = False
         self.show_field_names = False
 
@@ -304,12 +306,19 @@ class SheetItem(QGraphicsItem):
                 self._paint_card(painter, self.cell_rect(cell), item["path"], rotation, sheet)
         for cell in self.positions:
             self._paint_outline(painter, cell, sheet, rotation)
-        if self.selected in self.positions:
-            pen = QPen(SELECT, 3)
+        painter.setBrush(Qt.NoBrush)
+        for cell in sorted(self.selection | {self.selected}):
+            if cell not in self.positions:
+                continue
+            current = cell == self.selected
+            if len(self.selection) > 1:
+                painter.fillRect(self.cell_rect(cell), QColor(255, 122, 0, 38))
+            pen = QPen(SELECT, 3 if current else 2)
             pen.setCosmetic(True)
+            if not current:
+                pen.setStyle(Qt.DashLine)
             painter.setPen(pen)
-            painter.setBrush(Qt.NoBrush)
-            painter.drawRect(self.cell_rect(self.selected))
+            painter.drawRect(self.cell_rect(cell))
         for field in self.definition["text_fields"]:
             self._paint_text(painter, field)
         pen = QPen(QColor("#30343a"), 1)
@@ -471,8 +480,9 @@ class SheetView(QGraphicsView):
             item.size = tuple(size_mm or (305.0, 506.0))
         item.definition = definition
         item.positions = cells(definition) if definition else {}
+        item.selection &= set(item.positions)
         if item.selected not in item.positions:
-            item.selected = 0
+            item.selected = max(item.selection, default=0)
         self.scene().setSceneRect(item.fit_rect())
         item.update()
         if self.fitted:
@@ -499,16 +509,63 @@ class SheetView(QGraphicsView):
         self.item.texts = dict(texts)
         self.item.update()
 
+    def _set_selection(self, cells, current):
+        item = self.item
+        cells = {cell for cell in cells if cell in item.positions}
+        current = current if current in cells else max(cells, default=0)
+        if cells != item.selection or current != item.selected:
+            item.selection = cells
+            item.selected = current
+            item.update()
+            self.cellSelected.emit(current)
+
     def select(self, cell):
-        cell = cell if cell in self.item.positions else 0
-        if cell != self.item.selected:
-            self.item.selected = cell
-            self.item.update()
-            self.cellSelected.emit(cell)
+        """Select one cell only (0 clears the selection)."""
+        self._set_selection({cell} if cell else set(), cell)
+
+    def toggle(self, cell):
+        """Ctrl+click: add a cell to the selection or take it out."""
+        if cell not in self.item.positions:
+            return
+        cells = set(self.item.selection)
+        if cell in cells and len(cells) > 1:
+            cells.discard(cell)
+            self._set_selection(cells, self.item.selected if self.item.selected in cells else 0)
+        else:
+            cells.add(cell)
+            self._set_selection(cells, cell)
+
+    def extend(self, cell):
+        """Shift+click: select from the current cell to ``cell`` in fill order."""
+        anchor = self.item.selected
+        if cell not in self.item.positions or not anchor:
+            self.select(cell)
+            return
+        order = self.fill_order()
+        first, last = sorted((order.index(anchor), order.index(cell)))
+        # The current cell stays where it was, so further Shift+clicks pivot on it.
+        self._set_selection(set(order[first : last + 1]), anchor)
+
+    def select_all(self):
+        cells = set(self.item.positions)
+        self._set_selection(cells, self.item.selected or min(cells, default=0))
+
+    def fill_order(self):
+        """Cell numbers in the template's fill order."""
+        definition = self.item.definition
+        if not definition:
+            return []
+        return list(fill_sequence(definition["grid"]["count"], definition["fill_direction"]))
 
     @property
     def selected(self):
+        """The current cell: the one a load or paste starts from."""
         return self.item.selected
+
+    @property
+    def selected_cells(self):
+        """All selected cells in fill order."""
+        return [cell for cell in self.fill_order() if cell in self.item.selection]
 
     # -- view -------------------------------------------------------------
 
@@ -540,8 +597,16 @@ class SheetView(QGraphicsView):
 
     def mousePressEvent(self, event):
         if event.button() == Qt.LeftButton:
-            self.select(self._cell_at(event.position().toPoint()))
+            self.click(self._cell_at(event.position().toPoint()), event.modifiers())
         super().mousePressEvent(event)
+
+    def click(self, cell, modifiers=Qt.NoModifier):
+        if cell and modifiers & Qt.ControlModifier:
+            self.toggle(cell)
+        elif cell and modifiers & Qt.ShiftModifier:
+            self.extend(cell)
+        else:
+            self.select(cell)
 
     def mouseDoubleClickEvent(self, event):
         if event.button() == Qt.LeftButton:
