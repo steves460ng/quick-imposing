@@ -239,3 +239,66 @@ def test_qpdf_warnings_do_not_fail_a_build(root, tmp_path, monkeypatch):
     assert report["status"] == "FAIL"
     assert report["errors"][0]["code"] == "PDF_VALIDATION_FAILED"
     assert not (tmp_path / "w" / "b.pdf").exists()
+
+
+def names(session):
+    return {c: (i["path"].name, i["order"]) for c, i in sorted(session.placements.items())}
+
+
+def test_copy_keeps_empty_cells_in_fill_order(root):
+    session = small(root, "reverse")  # fill order 3 2 1 6 5 4 9 8 7
+    session.assign(1, cards(1)[0])
+    session.assign(3, cards(3)[0])
+    session.assign(5, cards(2)[0])
+    copied = session.copy_cells([1, 2, 3, 5])
+    assert [p.name if p else None for p in copied] == ["c-3.pdf", None, "c-1.pdf", "c-2.pdf"]
+    assert session.copy_cells([]) == []
+
+
+def test_paste_replaces_clears_and_keeps_order(root):
+    session = small(root)  # forward: 1..9
+    session.fill(1, cards(1, 2, 3))  # cells 1 2 3, orders 1 2 3
+    session.assign(5, cards(10)[0])  # order 4
+    session.assign(6, cards(11)[0])  # order 5
+    items = session.copy_cells([1, 2, 3])  # c-1 c-2 c-3
+    items.insert(1, None)  # c-1, empty, c-2, c-3
+    plan = session.plan_paste(4, items)
+    assert [c for c, _ in plan["targets"]] == [4, 5, 6, 7]
+    assert plan["replaced"] == [6] and plan["cleared"] == [5] and plan["unplaced"] == []
+    assert names(session)[5] == ("c-10.pdf", 4)  # planning changes nothing
+    assert session.apply_paste(plan) == 3
+    assert names(session) == {
+        1: ("c-1.pdf", 1), 2: ("c-2.pdf", 2), 3: ("c-3.pdf", 3),
+        4: ("c-1.pdf", 6),  # was empty: goes on top
+        6: ("c-2.pdf", 5),  # replaced: keeps its order
+        7: ("c-3.pdf", 7),
+    }
+    assert 5 not in session.placements  # emptied by the copied empty cell
+
+    # The same data pasted onto itself is not a replacement.
+    same = session.plan_paste(1, session.copy_cells([1, 2, 3]))
+    assert same["replaced"] == [] and same["cleared"] == []
+
+
+def test_paste_stops_at_the_last_cell(root):
+    session = small(root, "reverse")
+    session.fill(3, cards(1, 2, 3))  # cells 3 2 1
+    items = session.copy_cells([1, 2, 3]) + [None]
+    plan = session.plan_paste(8, items)  # only 8 and 7 remain
+    assert [c for c, _ in plan["targets"]] == [8, 7]
+    assert [p.name for p in plan["unplaced"]] == ["c-3.pdf"]  # the trailing empty cell is not counted
+    session.apply_paste(plan)
+    assert names(session)[8][0] == "c-1.pdf" and names(session)[7][0] == "c-2.pdf"
+    # Trailing empty cells alone do not count as unplaced data.
+    assert session.plan_paste(7, [cards(1)[0], None, None])["unplaced"] == []
+    with pytest.raises(SessionError):
+        session.plan_paste(10, items)
+
+
+def test_pasted_project_builds(root, tmp_path):
+    session = Session.new(root, "T31-front-3x8")
+    session.fill(1, cards(1, 2, 3))
+    session.apply_paste(session.plan_paste(22, session.copy_cells([1, 2, 3])))
+    report = session.save(tmp_path / "paste" / "a.pdf")
+    assert report["status"] == "PASS"
+    assert sorted(p["cell"] for p in report["placements"]) == [1, 2, 3, 22, 23, 24]

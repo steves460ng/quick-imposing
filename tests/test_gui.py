@@ -241,3 +241,131 @@ def test_text_position_does_not_move_the_sheet(app):
     definition["grid"]["origin_mm"] = [150, 49.5]
     assert margins(35) != reference
     view.close()
+
+
+def test_multi_selection(app, root):
+    from PySide6.QtCore import Qt
+
+    window = WorkWindow(root)
+    window.show()
+    window.start_session("T31-front-3x8")
+    view = window.view
+    view.click(2)
+    assert view.selected == 2 and view.selected_cells == [2]
+    view.click(5, Qt.ShiftModifier)  # range in fill order, pivot stays on 2
+    assert view.selected_cells == [2, 3, 4, 5] and view.selected == 2
+    view.click(9, Qt.ControlModifier)
+    assert view.selected_cells == [2, 3, 4, 5, 9] and view.selected == 9
+    view.click(3, Qt.ControlModifier)  # Ctrl+click again takes a cell out
+    assert view.selected_cells == [2, 4, 5, 9]
+    view.click(7)
+    assert view.selected_cells == [7]
+    view.select_all()
+    assert len(view.selected_cells) == 24
+    view.click(0)
+    assert view.selected == 0 and view.selected_cells == []
+    assert not window.grab().isNull()
+    window.close()
+
+
+def test_copy_and_paste_cells(app, dialogs, root):
+    from PySide6.QtCore import Qt
+
+    window = WorkWindow(root)
+    window.show()
+    window.start_session("T31-front-3x8")
+    view, session = window.view, None
+    window.place_files(1, [str(DATA / f"c-{n}.pdf") for n in (1, 2)])  # cells 1, 2
+    session = window.session
+    assert not window.paste_action.isEnabled()  # nothing copied yet
+
+    view.click(1)
+    view.click(3, Qt.ShiftModifier)  # cells 1 2 3 (3 is empty)
+    assert window.copy_action.isEnabled()
+    window.copy_cells()
+    assert [p.name if p else None for p in window.clipboard] == ["c-1.pdf", "c-2.pdf", None]
+
+    # Paste onto empty cells: no question is asked.
+    before = len(dialogs)
+    view.click(10)
+    assert window.paste_action.isEnabled()
+    window.paste_cells()
+    assert len(dialogs) == before
+    assert {c: i["path"].name for c, i in session.placements.items()} == {
+        1: "c-1.pdf", 2: "c-2.pdf", 10: "c-1.pdf", 11: "c-2.pdf",
+    }
+
+    # Paste over existing data: one question; replaced keeps order, empty clears.
+    window.place_files(12, [str(DATA / "c-3.pdf")])
+    order_11 = session.placements[11]["order"]
+    view.click(11)
+    window.paste_cells()
+    kind, title, text = dialogs[-1]
+    assert kind == "question" and "2개" in text
+    assert session.placements[11]["path"].name == "c-1.pdf"
+    assert session.placements[11]["order"] == order_11
+    assert session.placements[12]["path"].name == "c-2.pdf"
+    assert 13 not in session.placements
+
+    # Past the last cell: paste what fits, then warn.
+    view.click(24)
+    window.paste_cells()
+    assert session.placements[24]["path"].name == "c-1.pdf"
+    kind, title, text = dialogs[-1]
+    assert kind == "warning" and "c-2.pdf" in text
+
+    # Delete empties every selected cell.
+    view.click(10)
+    view.click(12, Qt.ShiftModifier)
+    window.remove_selected()
+    assert not {10, 11, 12} & set(session.placements)
+
+    # The copied cells survive a new job.
+    window.session.dirty = False
+    window.new_job()
+    window.view.click(1)
+    window.paste_cells()
+    assert window.session.placements[2]["path"].name == "c-2.pdf"
+    window.session.dirty = False
+    window.close()
+
+
+def test_paste_can_be_declined(app, root, monkeypatch):
+    monkeypatch.setattr(QMessageBox, "question", staticmethod(lambda *a, **k: QMessageBox.No))
+    window = WorkWindow(root)
+    window.start_session("T31-front-3x8")
+    window.place_files(1, [str(DATA / "c-1.pdf")])
+    window.place_files(2, [str(DATA / "c-2.pdf")])
+    window.view.click(1)
+    window.copy_cells()
+    window.view.click(2)
+    window.paste_cells()
+    assert window.session.placements[2]["path"].name == "c-2.pdf"
+    window.session.dirty = False
+    window.close()
+
+
+def test_text_field_keeps_its_own_copy_and_paste(app, dialogs, root):
+    """Ctrl+C / Ctrl+V typed in a text box edit the text, not the cells."""
+    from PySide6.QtCore import Qt
+    from PySide6.QtGui import QGuiApplication
+    from PySide6.QtTest import QTest
+
+    window = WorkWindow(root)
+    window.show()
+    window.activateWindow()
+    window.start_session("T31-front-3x8")
+    window.place_files(1, [str(DATA / "c-1.pdf")])
+    window.view.click(1)
+    window.copy_cells()
+    edit = window.text_edits["product"]
+    edit.setFocus()
+    app.processEvents()
+    QGuiApplication.clipboard().setText("제품A")
+    QTest.keyClick(edit, Qt.Key_V, Qt.ControlModifier)
+    app.processEvents()
+    if edit.hasFocus():  # focus needs an active window; skip the check otherwise
+        assert edit.text() == "제품A"
+        assert set(window.session.placements) == {1}
+    window.session.dirty = False
+    window.close()

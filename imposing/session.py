@@ -8,7 +8,7 @@ import json
 import os
 from pathlib import Path
 
-from .autofill import natural_file_key, plan_fill
+from .autofill import fill_sequence, natural_file_key, plan_fill
 from .engine import generate
 from .model import cells, overlap_pairs, project_errors
 from . import store
@@ -171,6 +171,68 @@ class Session:
             blocked_cell=blocked_cell,
             unplaced=ordered[len(assigned) :],
         )
+
+    # -- copy and paste ---------------------------------------------------
+
+    def fill_order(self):
+        """Cell numbers in the template's fill order."""
+        return list(
+            fill_sequence(self.template["grid"]["count"], self.template["fill_direction"])
+        )
+
+    def copy_cells(self, cells):
+        """The data of ``cells`` in fill order; empty cells are kept as None."""
+        wanted = set(cells)
+        return [
+            self.placements[cell]["path"] if cell in self.placements else None
+            for cell in self.fill_order()
+            if cell in wanted
+        ]
+
+    def plan_paste(self, start_cell, items):
+        """Work out a paste of ``items`` (paths or None) from ``start_cell``.
+
+        Items go into consecutive cells in fill order. Nothing is changed yet.
+        Returns dict(targets=[(cell, path or None)], replaced=[cell],
+        cleared=[cell], unplaced=[path]):
+          replaced  occupied cells that get different data
+          cleared   occupied cells that an empty copied cell empties
+          unplaced  data that did not fit before the last cell
+        """
+        order = self.fill_order()
+        if start_cell not in order:
+            raise SessionError(
+                f"템플릿에 없는 셀입니다: {start_cell}", "CELL_NOT_IN_TEMPLATE"
+            )
+        cells = order[order.index(start_cell) :]
+        items = [None if item is None else Path(os.path.abspath(item)) for item in items]
+        targets = list(zip(cells, items))
+        replaced, cleared = [], []
+        for cell, path in targets:
+            current = self.placements.get(cell)
+            if current is None:
+                continue
+            if path is None:
+                cleared.append(cell)
+            elif path != current["path"]:
+                replaced.append(cell)
+        unplaced = [path for path in items[len(targets) :] if path is not None]
+        return dict(targets=targets, replaced=replaced, cleared=cleared, unplaced=unplaced)
+
+    def apply_paste(self, plan):
+        """Carry out a plan from plan_paste. Returns the number of cells set.
+
+        A replaced cell keeps its drawing order (the rule for replacing data);
+        a cell that was empty goes on top.
+        """
+        count = 0
+        for cell, path in plan["targets"]:
+            if path is None:
+                self.remove(cell)
+            else:
+                self.assign(cell, path)
+                count += 1
+        return count
 
     # -- saving -----------------------------------------------------------
 

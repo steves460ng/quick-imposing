@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "quick-imposing"
-version = "0.4.3"
+version = "0.5.0"
 description = "Vector-preserving PDF imposition with template and project files"
 requires-python = ">=3.12"
 dependencies = ["pikepdf==10.18.0", "Pillow==13.0.0", "fonttools==4.68.0"]
