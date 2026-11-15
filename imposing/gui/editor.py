@@ -420,13 +420,12 @@ class EditorWindow(QMainWindow):
         """Coordinates of the clicked cell, to check the layout against the spec."""
         found = self.cell_position(self.view.selected)
         if found is None:
-            self.cell_label.setText("셀을 누르면 그 셀의 좌표(mm)가 여기에 표시됩니다.")
+            self.cell_label.setText("셀을 누르면 그 셀의 좌상단 좌표와 크기(mm)가 여기에 표시됩니다.")
             return
-        row, column, left, top, right, bottom = found
+        _, _, left, top, right, bottom = found
         self.cell_label.setText(
-            f"<b>셀 {self.view.selected}</b> ({row}행 {column}열) — "
-            f"좌상단 <b>X {number_text(left)}, Y {number_text(top)}</b> mm"
-            f" · 우하단 X {number_text(right)}, Y {number_text(bottom)} mm"
+            f"X{number_text(left)}, Y{number_text(top)} mm "
+            f"{number_text(right - left)}x{number_text(bottom - top)}mm"
         )
 
     def _changed(self, *_):

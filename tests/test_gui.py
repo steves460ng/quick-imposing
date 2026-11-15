@@ -379,16 +379,17 @@ def test_editor_shows_cell_coordinates(app, dialogs, root):
     editor.open_template("T31-front-3x8")
     editor.view.click(1)
     assert editor.cell_position(1) == (1, 1, 24, 49.5, 109, 99.5)
-    assert "X 24, Y 49.5" in editor.cell_label.text()
+    assert editor.cell_label.text() == "X24, Y49.5 mm 85x50mm"
     editor.view.click(24)  # row 8, column 3
     assert editor.cell_position(24) == (8, 3, 24 + 2 * 86, 49.5 + 7 * 51, 281, 456.5)
-    assert "셀 24" in editor.cell_label.text() and "8행 3열" in editor.cell_label.text()
-    assert "X 196, Y 406.5" in editor.cell_label.text()
-    assert "X 281, Y 456.5" in editor.cell_label.text()
+    assert editor.cell_label.text() == "X196, Y406.5 mm 85x50mm"
     # The readout follows edits to the grid.
     editor.origin_x.setValue(30)
     editor.pitch_y.setValue(52.25)
-    assert "X 202, Y 415.25" in editor.cell_label.text()
+    assert editor.cell_label.text() == "X202, Y415.25 mm 85x50mm"
+    editor.cell_w.setValue(56)
+    editor.cell_h.setValue(80)
+    assert editor.cell_label.text() == "X202, Y415.25 mm 56x80mm"
     editor.view.click(0)
     assert "누르면" in editor.cell_label.text()
     editor.revert()
