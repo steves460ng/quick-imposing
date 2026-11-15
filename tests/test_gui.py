@@ -369,3 +369,27 @@ def test_text_field_keeps_its_own_copy_and_paste(app, dialogs, root):
         assert set(window.session.placements) == {1}
     window.session.dirty = False
     window.close()
+
+
+def test_editor_shows_cell_coordinates(app, dialogs, root):
+    """Clicking a cell shows its top-left corner in mm (grid: origin 24, 49.5; pitch 86, 51)."""
+    editor = EditorWindow(root)
+    editor.show()
+    assert "누르면" in editor.cell_label.text()
+    editor.open_template("T31-front-3x8")
+    editor.view.click(1)
+    assert editor.cell_position(1) == (1, 1, 24, 49.5, 109, 99.5)
+    assert "X 24, Y 49.5" in editor.cell_label.text()
+    editor.view.click(24)  # row 8, column 3
+    assert editor.cell_position(24) == (8, 3, 24 + 2 * 86, 49.5 + 7 * 51, 281, 456.5)
+    assert "셀 24" in editor.cell_label.text() and "8행 3열" in editor.cell_label.text()
+    assert "X 196, Y 406.5" in editor.cell_label.text()
+    assert "X 281, Y 456.5" in editor.cell_label.text()
+    # The readout follows edits to the grid.
+    editor.origin_x.setValue(30)
+    editor.pitch_y.setValue(52.25)
+    assert "X 202, Y 415.25" in editor.cell_label.text()
+    editor.view.click(0)
+    assert "누르면" in editor.cell_label.text()
+    editor.revert()
+    editor.close()

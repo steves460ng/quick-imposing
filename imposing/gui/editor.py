@@ -245,9 +245,13 @@ class EditorWindow(QMainWindow):
         row.addWidget(zoom_hint)
         row.addStretch(1)
         row.addWidget(fit_button)
+        self.cell_label = QLabel("")
+        self.cell_label.setTextInteractionFlags(Qt.TextSelectableByMouse)
+        self.view.cellSelected.connect(lambda _: self._show_cell())
         right = QWidget()
         column = QVBoxLayout(right)
         column.addWidget(self.view, 1)
+        column.addWidget(self.cell_label)
         column.addLayout(row)
 
         splitter = QSplitter()
@@ -394,6 +398,37 @@ class EditorWindow(QMainWindow):
 
     # -- live feedback ----------------------------------------------------
 
+    def cell_position(self, cell):
+        """(row, column, left, top, right, bottom) of a cell in mm, or None."""
+        definition = self.view.item.definition
+        positions = self.view.item.positions
+        if not definition or cell not in positions:
+            return None
+        columns = definition["grid"]["count"][0]
+        width, height = definition["cell"]["size_mm"]
+        left, top = positions[cell]
+        return (
+            (cell - 1) // columns + 1,
+            (cell - 1) % columns + 1,
+            left,
+            top,
+            left + width,
+            top + height,
+        )
+
+    def _show_cell(self):
+        """Coordinates of the clicked cell, to check the layout against the spec."""
+        found = self.cell_position(self.view.selected)
+        if found is None:
+            self.cell_label.setText("셀을 누르면 그 셀의 좌표(mm)가 여기에 표시됩니다.")
+            return
+        row, column, left, top, right, bottom = found
+        self.cell_label.setText(
+            f"<b>셀 {self.view.selected}</b> ({row}행 {column}열) — "
+            f"좌상단 <b>X {number_text(left)}, Y {number_text(top)}</b> mm"
+            f" · 우하단 X {number_text(right)}, Y {number_text(bottom)} mm"
+        )
+
     def _changed(self, *_):
         if self.loading:
             return
@@ -401,6 +436,7 @@ class EditorWindow(QMainWindow):
         base = self.base_file()
         self.view.set_sheet(base, definition)
         self.view.set_texts({})
+        self._show_cell()
         width, height = self.view.item.size
         if base:
             origin = "새로 선택함: " + Path(base).name if self.new_base else "템플릿에 저장된 사본"
