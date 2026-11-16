@@ -203,7 +203,13 @@ def generate(project_file, templates_root, output, font_dirs=(), overwrite=False
     except OSError as exc:
         fail("SCHEMA_INVALID", str(exc))
         return finish()
-    if any(path in all_inputs for path in (output, saved_project, report_file)):
+    # Rebuilding a saved project onto its own name may replace that project
+    # (it was read in full above); no other input is ever replaced.
+    rebuilt = overwrite and saved_project == project_file
+    if any(
+        path in all_inputs and not (rebuilt and path == saved_project)
+        for path in (output, saved_project, report_file)
+    ):
         raise ValueError("Output aliases an input")
     with ExitStack() as stack:
         try:

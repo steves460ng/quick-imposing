@@ -24,7 +24,7 @@
 - **엔진** `generate(..., overwrite=False)`: `True`이면 기존 출력 파일을 거부하지 않는다. 결과는 원래대로 출력 폴더 안 임시 폴더에서 만들고, qpdf 검사와 입력 해시 검사를 통과한 뒤에만 PDF → 미리보기 → 프로젝트 순으로 `os.replace`한 다음 리포트를 쓴다. 실패하면 기존 파일을 건드리지 않고, 기존 리포트가 있으면 실패 리포트로 바꾸지 않는다. 출력 경로가 폴더이면 덮어쓰기에서도 거부한다.
 - **세션** `Session.save(..., overwrite=False)`: 엔진에 넘긴다. 실패한 저장의 리포트를 지우는 기존 정리는, 저장 전에 리포트가 없었을 때만 한다(기존 PDF의 리포트를 지우지 않기 위해). 파일이 다른 프로그램에서 열려 교체할 수 없으면(`PermissionError`) `OUTPUT_LOCKED` 코드와 "열려 있으면 닫고 다시 저장" 안내를 낸다.
 - **작업 프로그램**: 같은 이름의 결과 파일이 있으면 기존 파일 목록과 함께 **덮어쓰기 / `이름-2`(으)로 저장 / 취소**를 묻는다. 기본 버튼은 안전한 쪽인 다른 이름 저장이다.
-- **명령행** `build`는 바꾸지 않았다. 같은 이름이 있으면 계속 오류로 끝난다.
+- **명령행** `build --overwrite`(사용자 답변 반영, 아래 수정 내역): 엔진의 `overwrite`를 쓴다. 옵션이 없으면 이전처럼 거부한다.
 
 ## 실행 방법 · 결과 요약
 
@@ -32,7 +32,7 @@ Linux(Python 3.13, qpdf, poppler-utils, Noto Sans CJK KR, Qt offscreen).
 
 | 검증 | 결과 |
 |---|---|
-| `python -m pytest -q` | **124 passed** (기준 113, 새 테스트 11) |
+| `python -m pytest -q` | **126 passed** (기준 113, 새 테스트 13) |
 | `python test03_runner.py` / `test32_runner.py` | PASS / PASS |
 | `ruff check --select F imposing tests` | 문제 없음 |
 | 화면 캡처(편집기 메모, 작업 프로그램 메모, 덮어쓰기 대화상자) | 확인함 |
@@ -52,11 +52,15 @@ Linux(Python 3.13, qpdf, poppler-utils, Noto Sans CJK KR, Qt offscreen).
 
 ## 질문
 
-1. 명령행 `build`에도 `--overwrite` 옵션이 필요한지. 지금은 작업 프로그램에서만 덮어쓴다.
-2. 메모를 작업 프로그램에서 더 눈에 띄게(예: 노란 안내 띠) 보여 줄지. 지금은 템플릿 정보 아래 일반 칸이다.
+1. ~~명령행 `build`에도 `--overwrite` 옵션이 필요한지~~ → 2026-11-16 사용자: 필요. 반영함.
+2. ~~메모를 노란 안내 띠처럼 더 눈에 띄게 보여 줄지~~ → 2026-11-16 사용자: 아니오. 지금 형태 유지.
 
 ---
 
 ## 검토
 
 ## 수정 내역
+
+### 2026-11-16 명령행 `build --overwrite`
+
+사용자 답변(질문 1)에 따라 `build`에 `--overwrite`를 추가했다. 동작은 작업 프로그램의 덮어쓰기와 같다(성공한 경우에만 네 파일 교체, 실패하면 기존 파일 · 리포트 유지). 저장된 프로젝트를 같은 이름으로 다시 만드는 경우(`build out/x.qiproj.json --output out/x.pdf --overwrite`)에는 출력 프로젝트가 입력 프로젝트와 같은 파일이 되는데, 입력은 처음에 모두 읽으므로 이 경우만 "출력이 입력과 겹침" 거부에서 뺐다. 템플릿 · 베이스 · 데이터와 겹치는 출력은 계속 거부한다. 테스트 2개 추가(`test_cli_overwrite`, `test_cli_rebuilds_saved_project_in_place`), pytest 126 passed, 두 실행기 PASS. SPEC §7.3 · DEVELOPMENT 반영.

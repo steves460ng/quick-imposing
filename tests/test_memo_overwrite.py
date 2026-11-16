@@ -255,3 +255,46 @@ def test_existing_dialog_buttons(app, root, tmp_path, monkeypatch):
     assert "덮어쓰기" in seen["buttons"] and "취소" in seen["buttons"]
     assert seen["default"] == "'x-2.pdf'(으)로 저장"  # the safe choice is default
     window.close()
+
+
+def run_cli(*args):
+    import subprocess
+    import sys
+
+    return subprocess.run(
+        [sys.executable, "-m", "imposing", *map(str, args)],
+        cwd=ROOT,
+        capture_output=True,
+        text=True,
+    )
+
+
+def test_cli_overwrite(root, tmp_path):
+    session = built_session(root, 1)
+    project = tmp_path / "p.qiproj.json"
+    project.write_text(json.dumps(session.to_project(tmp_path)), encoding="utf-8")
+    output = tmp_path / "out" / "r.pdf"
+    build = ("build", project, "--templates-root", root, "--output", output)
+    assert run_cli(*build).returncode == 0
+    first = output.read_bytes()
+    refused = run_cli(*build)
+    assert refused.returncode == 1 and "Refusing to overwrite" in refused.stderr
+    assert output.read_bytes() == first
+    replaced = run_cli(*build, "--overwrite")
+    assert replaced.returncode == 0, replaced.stderr
+    assert '"status": "PASS"' in replaced.stdout
+
+
+def test_cli_rebuilds_saved_project_in_place(root, tmp_path):
+    # Typical use: fix a template, then rebuild a saved job onto its own name.
+    target = tmp_path / "out" / "x.pdf"
+    built_session(root, 1, 2).save(target)
+    saved = target.with_suffix(".qiproj.json")
+    before = json.loads(saved.read_text("utf-8"))
+    result = run_cli(
+        "build", saved, "--templates-root", root, "--output", target, "--overwrite"
+    )
+    assert result.returncode == 0, result.stderr
+    assert json.loads(saved.read_text("utf-8")) == before
+    # Without --overwrite the existing files are refused as before.
+    assert run_cli("build", saved, "--templates-root", root, "--output", target).returncode == 1
