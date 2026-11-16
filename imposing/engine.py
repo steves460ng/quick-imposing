@@ -4,6 +4,7 @@ from contextlib import ExitStack
 from datetime import datetime, timezone
 import copy
 import json
+import os
 from pathlib import Path
 import shutil
 import tempfile
@@ -91,7 +92,14 @@ def unique(resources, prefix):
     return f"/{prefix}{i}"
 
 
-def generate(project_file, templates_root, output, font_dirs=()):
+def generate(project_file, templates_root, output, font_dirs=(), overwrite=False):
+    """Build the PDF, project, preview and report for ``output``.
+
+    Existing output files are refused unless ``overwrite`` is true. With
+    ``overwrite`` the four files are replaced only by a passing build; a
+    failed build leaves existing files untouched and writes its report only
+    when no report file exists yet.
+    """
     project_file = Path(project_file).resolve()
     output = Path(output).resolve()
     saved_project = output.with_suffix(".qiproj.json")
@@ -117,11 +125,13 @@ def generate(project_file, templates_root, output, font_dirs=()):
         report["errors"].append(dict(code=code, reason=reason, **context))
 
     for path in (output, saved_project, report_file, output.with_suffix(".png")):
-        if path.exists():
+        if path.is_dir() or (path.exists() and not overwrite):
             raise FileExistsError(f"Refusing to overwrite: {path}")
     output.parent.mkdir(parents=True, exist_ok=True)
 
     def finish():
+        if overwrite and report["status"] != "PASS" and report_file.exists():
+            return report  # keep the report that belongs to the existing PDF
         report_file.write_text(
             json.dumps(report, ensure_ascii=False, indent=2) + "\n", encoding="utf-8"
         )
@@ -193,7 +203,13 @@ def generate(project_file, templates_root, output, font_dirs=()):
     except OSError as exc:
         fail("SCHEMA_INVALID", str(exc))
         return finish()
-    if any(path in all_inputs for path in (output, saved_project, report_file)):
+    # Rebuilding a saved project onto its own name may replace that project
+    # (it was read in full above); no other input is ever replaced.
+    rebuilt = overwrite and saved_project == project_file
+    if any(
+        path in all_inputs and not (rebuilt and path == saved_project)
+        for path in (output, saved_project, report_file)
+    ):
         raise ValueError("Output aliases an input")
     with ExitStack() as stack:
         try:
@@ -373,9 +389,12 @@ def generate(project_file, templates_root, output, font_dirs=()):
             if not all(digest(path) == sha for path, sha in report["inputs"].items()):
                 fail("INPUT_CHANGED", "An input file changed during the build")
                 return finish()
-            shutil.move(result, output)
-            shutil.move(tmp / "preview.png", output.with_suffix(".png"))
-            shutil.move(tmp / "project.json", saved_project)
+            # The staging folder is next to the output, so os.replace stays on
+            # one volume and replaces each existing file in one step.
+            publish = os.replace if overwrite else shutil.move
+            publish(result, output)
+            publish(tmp / "preview.png", output.with_suffix(".png"))
+            publish(tmp / "project.json", saved_project)
         report["status"] = "PASS"
         report["checks"] = [
             dict(id="V1", passed=True, qpdf_warnings=qpdf_warnings),

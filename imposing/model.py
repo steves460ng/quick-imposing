@@ -120,6 +120,9 @@ def template_errors(t, folder=None):
         "fill_direction",
         "must be forward or reverse",
     )
+    require(
+        isinstance(t.get("memo", ""), str), "memo", "must be a string if present"
+    )
     fields = t.get("text_fields")
     require(isinstance(fields, list), "text_fields", "must be a list")
     ids = set()

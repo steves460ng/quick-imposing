@@ -19,6 +19,11 @@ def main():
     build.add_argument("--templates-root", type=Path, required=True)
     build.add_argument("--output", type=Path, required=True)
     build.add_argument("--font-dir", action="append", default=[])
+    build.add_argument(
+        "--overwrite",
+        action="store_true",
+        help="Replace existing output files, only if the build passes",
+    )
     fill = commands.add_parser("autofill", help="Append files to a new project copy")
     source = fill.add_mutually_exclusive_group(required=True)
     source.add_argument("--project", type=Path)
@@ -52,7 +57,11 @@ def main():
             )
         else:
             report = generate(
-                args.project, args.templates_root, args.output, args.font_dir
+                args.project,
+                args.templates_root,
+                args.output,
+                args.font_dir,
+                overwrite=args.overwrite,
             )
         print(
             json.dumps(

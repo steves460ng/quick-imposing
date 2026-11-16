@@ -20,6 +20,7 @@ from PySide6.QtWidgets import (
     QListWidget,
     QMainWindow,
     QMessageBox,
+    QPlainTextEdit,
     QPushButton,
     QScrollArea,
     QSpinBox,
@@ -136,11 +137,18 @@ class EditorWindow(QMainWindow):
         self.base_label.setWordWrap(True)
         self.base_button = QPushButton("베이스 PDF 선택…")
         self.base_button.clicked.connect(self.choose_base)
+        self.memo_edit = QPlainTextEdit()
+        self.memo_edit.setPlaceholderText(
+            "작업 화면에 보여 줄 메모 (예: 용지, 재단 방향, 주의 사항)"
+        )
+        self.memo_edit.setMaximumHeight(80)
+        self.memo_edit.textChanged.connect(self._changed)
         basic = QGroupBox("기본")
         form = QFormLayout(basic)
         form.addRow("이름", self.name_edit)
         form.addRow("베이스", self.base_label)
         form.addRow("", self.base_button)
+        form.addRow("메모", self.memo_edit)
 
         self.cell_w = mm_box(0.001, 5000, 85)
         self.cell_h = mm_box(0.001, 5000, 50)
@@ -350,7 +358,7 @@ class EditorWindow(QMainWindow):
                     "size_pt": plain_number(self.table.cellWidget(row, 4).value()),
                 }
             )
-        return {
+        definition = {
             "schema": "quick-imposing/template@2",
             "name": self.name_edit.text().strip(),
             "base": "base.pdf",
@@ -366,6 +374,12 @@ class EditorWindow(QMainWindow):
             "fill_direction": self.direction.currentData(),
             "text_fields": fields,
         }
+        # Optional key: written only when there is a memo, so templates without
+        # one stay byte-for-byte as before.
+        memo = self.memo_edit.toPlainText().strip()
+        if memo:
+            definition["memo"] = memo
+        return definition
 
     def _fill_form(self, definition):
         self.loading = True
@@ -380,6 +394,7 @@ class EditorWindow(QMainWindow):
         self.pitch_x.setValue(definition["grid"]["pitch_mm"][0])
         self.pitch_y.setValue(definition["grid"]["pitch_mm"][1])
         self.direction.setCurrentIndex(self.direction.findData(definition["fill_direction"]))
+        self.memo_edit.setPlainText(definition.get("memo", ""))
         self.table.setRowCount(0)
         for field in definition["text_fields"]:
             self.add_field(field)

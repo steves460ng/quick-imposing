@@ -89,10 +89,20 @@ class WorkWindow(QMainWindow):
         self.template_info = QLabel("")
         self.template_info.setObjectName("hint")
         self.template_info.setWordWrap(True)
+        # The memo is written in the template editor; here it is read-only.
+        self.memo_label = QLabel("메모")
+        self.memo_view = QPlainTextEdit()
+        self.memo_view.setReadOnly(True)
+        self.memo_view.setMaximumHeight(90)
+        self.memo_view.setToolTip("템플릿 편집기에서 고칠 수 있습니다.")
+        self.memo_label.hide()
+        self.memo_view.hide()
         template_box = QGroupBox("1. 템플릿")
         layout = QVBoxLayout(template_box)
         layout.addWidget(self.template_combo)
         layout.addWidget(self.template_info)
+        layout.addWidget(self.memo_label)
+        layout.addWidget(self.memo_view)
 
         self.text_box = QGroupBox("2. 텍스트")
         self.text_form = QFormLayout(self.text_box)
@@ -282,6 +292,10 @@ class WorkWindow(QMainWindow):
             f"회전 {ROTATION_TEXT[definition['cell']['rotation_deg']]} · "
             f"{DIRECTION_TEXT[definition['fill_direction']]} 채움"
         )
+        memo = definition.get("memo", "").strip()
+        self.memo_view.setPlainText(memo)
+        self.memo_label.setVisible(bool(memo))
+        self.memo_view.setVisible(bool(memo))
         self._rebuild_text_fields()
         overlaps = session.overlaps()
         if overlaps:
@@ -549,20 +563,19 @@ class WorkWindow(QMainWindow):
         target = Path(path)
         if target.suffix.lower() != ".pdf":
             target = target.with_name(target.name + ".pdf")
-        if any(file.exists() for file in output_files(target)):
-            free = free_output_path(target)
-            answer = QMessageBox.question(
-                self,
-                "같은 이름의 파일이 있습니다",
-                f"'{target.stem}' 이름의 결과 파일이 이미 있습니다. 기존 파일은 덮어쓰지 않습니다.\n\n"
-                f"'{free.name}'(으)로 저장할까요?",
-            )
-            if answer != QMessageBox.Yes:
+        overwrite = False
+        existing = [file for file in output_files(target) if file.exists()]
+        if existing:
+            choice = self._ask_existing(target, existing)
+            if choice is None:
                 return
-            target = free
+            if choice == "overwrite":
+                overwrite = True
+            else:
+                target = free_output_path(target)
         self.setCursor(Qt.WaitCursor)
         try:
-            report = self.session.save(target)
+            report = self.session.save(target, overwrite=overwrite)
         except SessionError as exc:
             QMessageBox.critical(self, "저장하지 못했습니다", str(exc))
             return
@@ -588,6 +601,32 @@ class WorkWindow(QMainWindow):
         box.exec()
         if box.clickedButton() is folder_button:
             open_folder(target.parent)
+
+    def _ask_existing(self, target, existing):
+        """"overwrite", "rename" or None (cancel) for an output name in use."""
+        free = free_output_path(target)
+        box = QMessageBox(self)
+        box.setIcon(QMessageBox.Warning)
+        box.setWindowTitle("같은 이름의 파일이 있습니다")
+        box.setText(
+            f"'{target.stem}' 이름의 결과 파일이 이미 있습니다.\n"
+            + "\n".join(f"  {file.name}" for file in existing)
+        )
+        box.setInformativeText(
+            "덮어쓰면 PDF, 프로젝트, 미리보기, 리포트 네 파일을 새 내용으로 바꿉니다. "
+            "저장에 실패하면 기존 파일은 그대로 둡니다."
+        )
+        overwrite = box.addButton("덮어쓰기", QMessageBox.DestructiveRole)
+        rename = box.addButton(f"'{free.name}'(으)로 저장", QMessageBox.AcceptRole)
+        box.addButton("취소", QMessageBox.RejectRole)
+        box.setDefaultButton(rename)
+        box.exec()
+        clicked = box.clickedButton()
+        if clicked is overwrite:
+            return "overwrite"
+        if clicked is rename:
+            return "rename"
+        return None
 
     def _default_folder(self):
         if self.session.project_path:
