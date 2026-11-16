@@ -19,7 +19,7 @@
   - Python 런타임 라이선스(`LICENSE.txt`).
   - qpdf · Poppler: 실행 파일 폴더와 `tools\`의 내려받은 배포 폴더에서 LICENSE/COPYING/NOTICE 류 파일을 찾아 복사하고, 표준 문서(Apache-2.0 / GPL-2.0 · GPL-3.0)를 함께 넣는다. 버전은 실행해서 읽는다.
   - `README.md`: 구성 요소 · 버전 · 라이선스 · 문서 위치 표, Poppler 소스 안내, Qt LGPL 안내.
-  - 라이선스 문서가 하나도 없는 구성 요소가 있으면 종료 코드 1.
+  - 라이선스 문서가 하나도 없는 구성 요소는 경고(빌드 계속)하고, 표에 "라이선스 문서 없음"과 원문 주소(PyPI 등)를 적는다. `--strict`(`build.ps1 -StrictLicenses`)이면 종료 코드 1.
 - `packaging/licenses/`: Apache-2.0, GPL-2.0, GPL-3.0, LGPL-3.0 표준 전문.
 - `packaging/build.ps1`: 배포 폴더에 `LICENSE.txt`를 넣고 위 스크립트를 실행한다. 시작 점검의 필수 파일 목록에 `LICENSE.txt`, `THIRD-PARTY-LICENSES\README.md` 추가.
 - README: 사용자 부분에 "라이선스" 절, 개발 부분에 "라이선스와 서드파티 고지".
@@ -28,7 +28,7 @@
 
 | 검증 | 결과 |
 |---|---|
-| `python -m pytest -q` | **134 passed** (새 테스트 3: `tests/test_licenses.py`) |
+| `python -m pytest -q` | **135 passed** (새 테스트 4: `tests/test_licenses.py`) |
 | `ruff check --select F imposing tests packaging/collect_licenses.py` | 문제 없음 |
 | Linux에서 스크립트 실행 | 구성 요소 10개, 모두 라이선스 문서 있음 |
 
@@ -46,3 +46,7 @@ Windows 검증: 병합 전에 `windows` 워크플로를 수동 실행한다. 이
 ## 검토
 
 ## 수정 내역
+
+### 2026-11-16 문서가 없는 구성 요소: 실패 → 경고
+
+사용자 검토: "라이선스가 없다고 빌드가 안 되는 건 문제 아닌가." 메타데이터에 라이선스 이름만 있고 문서를 넣지 않은 패키지가 의존성에 새로 들어오면, 코드와 관계없이 배포본을 못 만들게 된다. MIT · BSD는 저작권자 줄이 필요해 표준 문서로 대신할 수도 없다. 그래서 기본은 경고(빌드 계속, 표에 "라이선스 문서 없음"과 원문 주소)로 바꾸고, 외부 배포 전 확인용으로 `build.ps1 -StrictLicenses`(`--strict`)를 두었다. 경고는 표준 출력으로 낸다(Windows PowerShell은 외부 명령의 표준 오류를 오류로 다룰 수 있음). 테스트 1개 추가.

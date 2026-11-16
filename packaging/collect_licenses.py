@@ -16,8 +16,10 @@ What goes in:
 - README.md: a table of every component, its version and license.
 
 Standard texts that a package does not ship (Qt's LGPL, qpdf's Apache,
-Poppler's GPL) come from packaging/licenses/. The script exits with an
-error when a component ends up without any license text.
+Poppler's GPL) come from packaging/licenses/. A component that still ends
+up without any license text is a warning: the build goes on and README.md
+marks it with a link to the original. With --strict it is an error
+(exit code 1), for a check before distributing outside.
 """
 
 import argparse
@@ -173,6 +175,11 @@ def collect_python(out, extra_roots):
             copied = copy_standard(names, target)
             if copied:
                 note = "패키지에 라이선스 파일이 없어 표준 문서를 넣음"
+            else:
+                note = (
+                    "**라이선스 문서 없음.** 패키지가 문서를 넣지 않았습니다. "
+                    f"원문: https://pypi.org/project/{name}/{version}/"
+                )
         rows.append(dict(name=name, version=version, license=expression, files=copied, note=note))
     return rows
 
@@ -195,7 +202,13 @@ def collect_runtime(out):
                 files=[target / "LICENSE.txt"],
                 note="",
             )
-    return dict(name="Python", version=sys.version.split()[0], license="PSF-2.0", files=[], note="")
+    return dict(
+        name="Python",
+        version=sys.version.split()[0],
+        license="PSF-2.0",
+        files=[],
+        note="**라이선스 문서 없음.** 원문: https://docs.python.org/3/license.html",
+    )
 
 
 def tool_version(executable, args):
@@ -295,6 +308,11 @@ def main(argv=None):
     parser.add_argument("--out", type=Path, required=True)
     parser.add_argument("--tool", action="append", default=[], help="NAME=EXECUTABLE")
     parser.add_argument("--search", action="append", default=[], type=Path)
+    parser.add_argument(
+        "--strict",
+        action="store_true",
+        help="exit with code 1 when a component has no license text",
+    )
     args = parser.parse_args(argv)
     # Korean names must not stop a build whose console is not UTF-8.
     for stream in (sys.stdout, sys.stderr):
@@ -316,8 +334,12 @@ def main(argv=None):
     for row in rows:
         print(f"  {row['name']} {row['version']}: {row['license']} ({len(row['files'])} files)")
     if missing:
-        print("License text missing for: " + ", ".join(missing), file=sys.stderr)
-        return 1
+        print(
+            "WARNING: license text missing for: " + ", ".join(missing)
+            + " (marked in THIRD-PARTY-LICENSES/README.md)"
+        )  # stdout: Windows PowerShell may treat a native command's stderr as an error
+        if args.strict:
+            return 1
     return 0
 
 

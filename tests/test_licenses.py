@@ -73,3 +73,17 @@ def test_standard_texts_are_complete():
     for name, head in heads.items():
         text = (folder / name).read_text(encoding="utf-8")
         assert head in text[:400] and len(text) > 7000, name
+
+
+def test_missing_license_text_warns_unless_strict(tmp_path, monkeypatch, capsys):
+    collector = load_collector()
+    # A package that ships no license file and has no standard text to use.
+    monkeypatch.setattr(collector, "metadata_license_files", lambda dist: [])
+    monkeypatch.setattr(collector, "fallback_for", lambda expression: [])
+    out = tmp_path / "out"
+    assert collector.main(["--out", str(out)]) == 0
+    readme = (out / "README.md").read_text(encoding="utf-8")
+    assert "라이선스 문서 없음" in readme
+    assert "https://pypi.org/project/fonttools/4.68.0/" in readme
+    assert "WARNING: license text missing for:" in capsys.readouterr().out
+    assert collector.main(["--out", str(out), "--strict"]) == 1

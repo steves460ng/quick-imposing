@@ -16,11 +16,13 @@
   .\packaging\build.ps1 -Test       # 빌드 전에 pytest도 돌린다 (Noto Sans CJK KR 글꼴 필요)
   .\packaging\build.ps1 -NoZip      # zip은 만들지 않는다
   .\packaging\build.ps1 -ToolsOnly  # qpdf, Poppler만 준비한다
+  .\packaging\build.ps1 -StrictLicenses  # 라이선스 문서가 없는 구성 요소가 있으면 빌드를 멈춘다
 #>
 param(
     [switch]$Test,
     [switch]$NoZip,
-    [switch]$ToolsOnly
+    [switch]$ToolsOnly,
+    [switch]$StrictLicenses
 )
 
 $ErrorActionPreference = "Stop"
@@ -142,9 +144,12 @@ if (Test-Path docs\images) { Copy-Item docs\images (Join-Path $dist "images") -R
 Set-Content (Join-Path $dist "VERSION.txt") $version -Encoding ascii
 # 라이선스: 퀵 임포징(MIT)과 함께 들어가는 구성 요소(Python 패키지, Python, qpdf, Poppler)
 Copy-Item LICENSE (Join-Path $dist "LICENSE.txt")
-& $python packaging\collect_licenses.py --out (Join-Path $dist "THIRD-PARTY-LICENSES") `
-    --tool "qpdf=bin\qpdf\qpdf.exe" --tool "poppler=bin\poppler\pdftoppm.exe" --search tools
-if ($LASTEXITCODE -ne 0) { Fail "서드파티 라이선스 모으기" }
+# 문서가 없는 구성 요소는 경고만 하고 README.md에 표시한다. -StrictLicenses면 멈춘다.
+$licenseArgs = @("--out", (Join-Path $dist "THIRD-PARTY-LICENSES"),
+    "--tool", "qpdf=bin\qpdf\qpdf.exe", "--tool", "poppler=bin\poppler\pdftoppm.exe", "--search", "tools")
+if ($StrictLicenses) { $licenseArgs += "--strict" }
+& $python packaging\collect_licenses.py @licenseArgs
+if ($LASTEXITCODE -ne 0) { Fail "서드파티 라이선스: 문서가 없는 구성 요소가 있습니다 (THIRD-PARTY-LICENSES\README.md)" }
 
 # ---------------------------------------------------------------- 5. 시작 점검
 Step "시작 점검"
