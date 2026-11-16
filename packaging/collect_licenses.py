@@ -36,6 +36,9 @@ from packaging.requirements import Requirement
 HERE = Path(__file__).resolve().parent
 STANDARD = HERE / "licenses"
 LICENSE_FILE = re.compile(r"(LICEN[CS]E|COPYING|NOTICE|AUTHORS|COPYRIGHT)", re.I)
+# License texts a package may ship that do not apply here: Qt is used under
+# the LGPL, not under its commercial license.
+NOT_APPLICABLE = re.compile(r"^LicenseRef-.*Commercial", re.I)
 TEXT_SUFFIXES = {"", ".txt", ".md", ".rst", ".apache", ".bsd", ".mit", ".lgpl", ".gpl"}
 
 # Standard texts for licenses that some components do not ship themselves.
@@ -132,6 +135,8 @@ def metadata_license_files(dist):
             continue
         inside = text.split(".dist-info/", 1)[1]
         path = Path(text)
+        if NOT_APPLICABLE.match(path.name):
+            continue
         if inside.startswith("licenses/") or (
             LICENSE_FILE.search(path.name) and path.suffix.lower() in TEXT_SUFFIXES
         ):
@@ -170,6 +175,14 @@ def collect_python(out, extra_roots):
             shutil.copyfile(dist.locate_file(entry), destination)
             copied.append(destination)
         note = ""
+        if "LGPL-3.0" in expression:
+            # Used under the LGPL: its text (and the GPL it builds on) must be
+            # there even when the package ships other license files.
+            have = {path.name for path in copied}
+            added = copy_standard([n for n in FALLBACK["LGPL-3.0"] if n not in have], target)
+            if added:
+                copied += added
+                note = "LGPL-3.0으로 사용. 표준 LGPL-3.0 · GPL-3.0 문서를 넣음"
         if not copied:
             names = fallback_for(expression)
             copied = copy_standard(names, target)

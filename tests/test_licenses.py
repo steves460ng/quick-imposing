@@ -47,9 +47,12 @@ def test_collects_every_component(tmp_path):
     assert "| quick-imposing" not in readme  # our own license is LICENSE.txt
     # Bundled libraries inside pikepdf (qpdf, zlib, ...) come along.
     assert (out / "python/pikepdf-10.18.0/third-party-licenses/qpdf.txt").is_file()
-    # Qt ships no license file: the LGPL (and the GPL it builds on) is added.
+    # Qt is used under the LGPL: its text (and the GPL it builds on) is always
+    # there, and the commercial license text that Windows wheels ship is not.
     qt = out / "python/PySide6_Essentials-6.10.1"
-    assert sorted(p.name for p in qt.iterdir()) == ["GPL-3.0.txt", "LGPL-3.0.txt"]
+    names = sorted(p.name for p in qt.rglob("*") if p.is_file())
+    assert "LGPL-3.0.txt" in names and "GPL-3.0.txt" in names
+    assert not [n for n in names if "Commercial" in n]
     assert (out / "python-runtime/LICENSE.txt").is_file()
     # Tool licenses from the downloaded release folders, plus the standard text.
     assert (out / "qpdf/package/qpdf-12.0.0-msvc64/LICENSE.txt").read_text() == "qpdf license"
@@ -87,3 +90,28 @@ def test_missing_license_text_warns_unless_strict(tmp_path, monkeypatch, capsys)
     assert "https://pypi.org/project/fonttools/4.68.0/" in readme
     assert "WARNING: license text missing for:" in capsys.readouterr().out
     assert collector.main(["--out", str(out), "--strict"]) == 1
+
+
+def test_lgpl_text_added_next_to_shipped_files(tmp_path, monkeypatch):
+    collector = load_collector()
+    shipped = tmp_path / "pkg.dist-info" / "licenses"
+    shipped.mkdir(parents=True)
+    (shipped / "LicenseRef-Qt-Commercial.txt").write_text("commercial")
+    (shipped / "NOTICE").write_text("notice")
+
+    class Entry(str):
+        pass
+
+    class Dist:
+        version = "1.0"
+        metadata = {"Name": "Qtish", "License-Expression": "LGPL-3.0-only OR GPL-3.0-only"}
+        files = [Entry("pkg.dist-info/licenses/LicenseRef-Qt-Commercial.txt"),
+                 Entry("pkg.dist-info/licenses/NOTICE")]
+
+        def locate_file(self, entry):
+            return tmp_path / entry
+
+    monkeypatch.setattr(collector, "runtime_distributions", lambda **kwargs: [Dist()])
+    rows = collector.collect_python(tmp_path / "out", extra_roots=())
+    names = sorted(path.name for path in rows[0]["files"])
+    assert names == ["GPL-3.0.txt", "LGPL-3.0.txt", "NOTICE"]

@@ -28,7 +28,7 @@
 
 | 검증 | 결과 |
 |---|---|
-| `python -m pytest -q` | **135 passed** (새 테스트 4: `tests/test_licenses.py`) |
+| `python -m pytest -q` | **136 passed** (새 테스트 5: `tests/test_licenses.py`) |
 | `ruff check --select F imposing tests packaging/collect_licenses.py` | 문제 없음 |
 | Linux에서 스크립트 실행 | 구성 요소 10개, 모두 라이선스 문서 있음 |
 
@@ -46,6 +46,14 @@ Windows 검증: 병합 전에 `windows` 워크플로를 수동 실행한다. 이
 ## 검토
 
 ## 수정 내역
+
+### 2026-11-16 Windows에서 Qt 라이선스가 상용 라이선스 문서만 들어간 문제
+
+Windows 워크플로 [43841936581](https://github.com/steves460ng/quick-imposing/actions/runs/43841936581) · [43842819521](https://github.com/steves460ng/quick-imposing/actions/runs/43842819521)에서 pytest가 실패했다(배포 빌드 단계는 통과). Windows용 PySide6 · shiboken6 패키지에는 Linux용과 달리 `LicenseRef-Qt-Commercial.txt`(Qt 상용 라이선스) 한 파일이 들어 있어, 표준 LGPL 문서를 넣는 조건(문서가 하나도 없을 때)에 걸리지 않았다. 그래서 배포본에 Qt 상용 라이선스만 들어가고 실제로 쓰는 LGPL 문서가 빠졌다.
+
+수정: 라이선스 표현에 LGPL-3.0이 있는 패키지는 패키지가 넣은 문서와 관계없이 LGPL-3.0 · GPL-3.0 표준 문서를 항상 넣는다. 이 배포본에 해당하지 않는 `LicenseRef-*Commercial*` 문서는 복사하지 않는다. Windows 패키지 구성을 흉내 낸 테스트 추가.
+
+이 실행에서 확인한 Windows 빌드 결과(빌드 단계 출력): 구성 요소 16개(altgraph, fonttools, lxml, packaging, pefile, pikepdf 13개 문서, pillow, pyinstaller, pyinstaller-hooks-contrib, PySide6_Essentials, pywin32-ctypes, setuptools, shiboken6, Python 3.12.10, qpdf 12.4.2, Poppler 26.09.0), 경고 없음. qpdf · Poppler는 내려받은 배포 파일에서 각각 라이선스 문서 1개를 찾았고 표준 문서가 함께 들어갔다. PyInstaller의 빌드용 의존성(altgraph, pefile, setuptools 등)도 목록에 들어가는데, 실제로 exe에 들어가지 않는 것까지 넣는 쪽이라 고지가 모자랄 일은 없다.
 
 ### 2026-11-16 문서가 없는 구성 요소: 실패 → 경고
 
