@@ -90,7 +90,7 @@ quick-imposing build out/autofill/second.qiproj.json \
 
 이미 배정된 셀이나 마지막 셀에서 막히면 그 앞까지 저장하고 `AUTOFILL_BLOCKED`를 기록합니다. 리포트에는 `reason`, `blocked_cell`(끝에 도달하면 null), 정렬된 미배정 파일 목록이 포함됩니다. 없는 기존 B도 배정된 셀로 취급합니다. 새 파일 목록 전체를 먼저 검사하므로 뒤쪽에 없는 파일이 있어도 프로젝트를 저장하지 않습니다.
 
-`--report`를 생략하면 출력 프로젝트의 마지막 확장자를 `.autofill.json`으로 바꾼 경로에 리포트를 씁니다. `sorted_files`와 `unplaced_files`는 절대경로, `added[].file`은 출력 프로젝트 기준 상대경로입니다. 막힘 경고는 종료 코드 0, 입력 오류는 1입니다. 기존 프로젝트와 리포트는 덮어쓰지 않습니다. 기존 리포트와 충돌하면 CLI 오류로 종료하므로 새 출력 경로를 지정하세요.
+`--report`를 생략하면 출력 프로젝트의 마지막 확장자를 `.autofill.json`으로 바꾼 경로에 리포트를 씁니다. `sorted_files`와 `unplaced_files`는 절대경로, `added[].file`은 출력 프로젝트 기준 상대경로입니다. 막힘 경고는 종료 코드 0, 입력 오류는 1입니다. 프로젝트에는 데이터 경로를 출력 프로젝트 기준 상대경로로 저장하므로, Windows에서 데이터와 출력 위치가 다른 드라이브이면 `build` · `autofill` 모두 `DIFFERENT_DRIVE` 오류로 끝나고 PDF · 프로젝트를 만들지 않습니다. 기존 프로젝트와 리포트는 덮어쓰지 않습니다. 기존 리포트와 충돌하면 CLI 오류로 종료하므로 새 출력 경로를 지정하세요.
 
 자동 배열은 PDF를 만들지 않습니다. 저장된 프로젝트를 기존 `build` 명령에 전달합니다. `samples/test03-2/template-defs/`의 `{source_base, template}`도 테스트 실행기 전용 래퍼입니다.
 

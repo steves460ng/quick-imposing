@@ -198,12 +198,18 @@ y = origin_y + (r−1) × pitch_y
 
 배치 내용 때문에 작업을 막는 경우는 현재 템플릿에 없는 셀을 참조할 때뿐이다. 겹침, 크기 차이, 마크 걸침, 판 이탈은 작업자의 판단으로 보고 진행한다. 아래 표의 나머지 오류는 템플릿·글꼴을 찾지 못했거나 입력 형식이 잘못된 경우다. 그 밖의 입력 오류는 별도 코드 없이 `SCHEMA_INVALID`와 사유 텍스트로 기록한다.
 
+생성 리포트와 자동 배열 리포트의 오류 항목은 모두 `{code, reason, …}` 형식이다. `reason`은 영문 진단 문장이며 항상 있다. 형식 검사에서 나온 `SCHEMA_INVALID`는 문제 필드 이름 `field`를 함께 기록하고, `reason`은 `"<field>: <설명>"` 형식이다(예: `"grid.pitch_mm: must be two numbers, not negative"`). 그 밖의 맥락(`cell`, `font`, `template`, `missing` 등)은 코드에 따라 덧붙는다. 화면 문구는 `code`로 고르며 `reason` 문장에 의존하지 않는다.
+
 | 상황 | 동작 | 코드 |
 |---|---|---|
 | 프로젝트의 셀 번호가 현재 템플릿에 없음 | 오류, PDF를 만들지 않음 | `CELL_NOT_IN_TEMPLATE` |
 | 템플릿을 찾을 수 없음 | 오류 | `TEMPLATE_NOT_FOUND` |
 | 텍스트 글꼴을 찾을 수 없음 | 오류 | `FONT_NOT_FOUND` |
+| 텍스트에 글꼴에 없는 글자가 있음 | 오류. 빠진 글자를 `missing`에 기록 | `FONT_GLYPH_MISSING` |
+| 글꼴 라이선스가 임베드를 금지함(`OS/2 fsType` 제한) | 오류 | `FONT_EMBED_FORBIDDEN` |
+| 지원하지 않는 글꼴 형식(이름 기반 CFF) | 오류 | `FONT_UNSUPPORTED` |
 | 형식 오류, 필수 키 누락, 허용되지 않은 값, `order` 중복, 한 셀에 배정 2개 이상, 음수 피치, 열 수 없거나 1페이지가 아닌 PDF | 오류 | `SCHEMA_INVALID` + 사유 |
+| 데이터와 저장 위치가 다른 드라이브여서 상대경로를 만들 수 없음(Windows) | 오류, PDF · 프로젝트를 만들지 않음. 자동 배열도 같음 | `DIFFERENT_DRIVE` |
 | 생성 후 자체 검사 실패 (`qpdf --check` 오류(종료 코드 2), 입력 파일 해시 변경) | 오류 | `PDF_VALIDATION_FAILED`, `INPUT_CHANGED` |
 | 셀끼리 겹침 | 경고 후 진행 | `CELL_OVERLAP` (경고) |
 | B 크기가 셀과 다름 | 경고 없이 진행 | — |
@@ -311,7 +317,7 @@ v0.5까지의 1차 테스트 케이스(TC1~TC12, 프리셋 기반)와 2차 테�
 - 입력 파일별 SHA-256, 사용한 템플릿과 프로젝트
 - 셀별 배치: 셀 번호, 파일, `order`, `cm` 행렬, `/BBox`, 그렸는지 여부(`drawn`)
 - 빈 셀 목록, 삽입한 텍스트
-- 오류·경고·정보 코드와 사유 (§6.4)
+- 오류·경고·정보 코드와 사유. 오류 항목 형식은 §6.4
 - Illustrator 전용 데이터 제거 위치 (R11)
 - 사람 확인이 필요한 항목 (V15, V18)
 
@@ -383,6 +389,7 @@ quick-imposing/
 | v0.5 | 2026-11-10 | Illustrator 전용 편집 데이터 제거(R11)를 필수 요구사항으로 추가 |
 | v0.6 | 2026-11-11 | `docs/TEMPLATE-REQUIREMENTS.md` v0.3과 3-1차·3-2차 구현 결과에 맞춰 개정. 아래 규칙을 대체했다 |
 | v0.6.1 | 2026-11-12 | V1 기준 보완: `qpdf --check`의 경고(종료 코드 3)는 통과로 보고 리포트에 기록한다. 저장소 구조에 GUI·배포 구성 추가 |
+| v0.6.2 | 2026-11-16 | 리팩토링 1단계(`docs/REFACTORING.md` R1 · R3 · R5): §6.4에 오류 코드 `FONT_GLYPH_MISSING` · `FONT_EMBED_FORBIDDEN` · `FONT_UNSUPPORTED` · `DIFFERENT_DRIVE` 추가(이전에는 `SCHEMA_INVALID`), 모든 오류 항목을 `{code, reason, field?}` 형식으로 통일 |
 
 v0.6에서 대체한 규칙과 현행 규칙:
 

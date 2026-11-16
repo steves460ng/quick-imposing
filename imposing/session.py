@@ -10,7 +10,7 @@ from pathlib import Path
 
 from .autofill import fill_sequence, natural_file_key, plan_fill
 from .engine import generate
-from .model import cells, overlap_pairs, project_errors
+from .model import PathError, cells, overlap_pairs, project_errors, relative_file
 from . import store
 
 
@@ -242,18 +242,18 @@ class Session:
             placements = [
                 dict(
                     cell=cell,
-                    file=Path(os.path.relpath(item["path"], folder)).as_posix(),
+                    file=relative_file(item["path"], folder),
                     order=item["order"],
                 )
                 for cell, item in sorted(
                     self.placements.items(), key=lambda entry: entry[1]["order"]
                 )
             ]
-        except ValueError:
+        except PathError as exc:
             raise SessionError(
                 "데이터와 저장 위치는 같은 드라이브에 있어야 합니다.\n"
                 "데이터가 있는 드라이브에 저장하세요.",
-                "DIFFERENT_DRIVE",
+                exc.code,
             ) from None
         return dict(
             schema="quick-imposing/project@1",

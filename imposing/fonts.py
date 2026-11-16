@@ -13,7 +13,15 @@ import pikepdf as p
 
 
 class FontError(ValueError):
-    pass
+    """A font problem; ``code`` is the report error code (SPEC §6.4).
+
+    ``context`` holds extra report fields, e.g. the missing characters.
+    """
+
+    def __init__(self, message, code, **context):
+        super().__init__(message)
+        self.code = code
+        self.context = context
 
 
 def system_dirs():
@@ -93,7 +101,7 @@ def catalogue(extra):
 def resolve(name, extra=()):
     value = catalogue(tuple(str(Path(d).resolve()) for d in extra)).get(name.casefold())
     if value is None:
-        raise FontError(f"Font not found: {name}")
+        raise FontError(f"Font not found: {name}", "FONT_NOT_FOUND")
     return value
 
 
@@ -109,9 +117,13 @@ def embed(pdf, location, text):
         cmap = font.getBestCmap()
         missing = sorted({ord(c) for c in text if ord(c) not in cmap})
         if missing:
-            raise FontError(f"Font lacks characters: {missing}")
+            raise FontError(
+                f"Font lacks characters: {missing}",
+                "FONT_GLYPH_MISSING",
+                missing=[chr(c) for c in missing],
+            )
         if font["OS/2"].fsType & 2:
-            raise FontError("Font license prohibits embedding")
+            raise FontError("Font license prohibits embedding", "FONT_EMBED_FORBIDDEN")
         options = subset.Options()
         options.recalc_timestamp = False
         sub = subset.Subsetter(options=options)
@@ -125,7 +137,8 @@ def embed(pdf, location, text):
             top = font["CFF "].cff.topDictIndex[0]
             if not hasattr(top, "ROS"):
                 raise FontError(
-                    "Name-keyed CFF is unsupported; choose a TrueType or CID-keyed CFF font"
+                    "Name-keyed CFF is unsupported; choose a TrueType or CID-keyed CFF font",
+                    "FONT_UNSUPPORTED",
                 )
             mapping = {c: int(cmap[ord(c)][3:]) for c in set(text)}
         else:

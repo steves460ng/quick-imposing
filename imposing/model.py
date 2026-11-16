@@ -2,7 +2,16 @@
 
 import math
 import ntpath
+import os
 from pathlib import Path
+
+
+class PathError(ValueError):
+    """A path cannot be stored; ``code`` is the report error code."""
+
+    def __init__(self, message, code):
+        super().__init__(message)
+        self.code = code
 
 
 def number(value):
@@ -38,96 +47,166 @@ def relative_path(value):
     )
 
 
+def relative_file(path, folder):
+    """``path`` relative to ``folder`` in POSIX form, as stored in project@1.
+
+    Raises PathError("DIFFERENT_DRIVE") when no relative path exists, i.e. the
+    two are on different Windows drives.
+    """
+    try:
+        return Path(os.path.relpath(path, folder)).as_posix()
+    except ValueError as exc:
+        raise PathError(
+            f"No relative path from {folder} to {path}: {exc}", "DIFFERENT_DRIVE"
+        ) from None
+
+
+def schema_error(field, reason):
+    """One report error entry for an invalid field (SPEC §6.4)."""
+    return dict(code="SCHEMA_INVALID", reason=f"{field}: {reason}", field=field)
+
+
 def template_errors(t, folder=None):
     errors = []
 
-    def require(ok, field):
+    def require(ok, field, reason):
         if not ok:
-            errors.append(dict(code="SCHEMA_INVALID", field=field))
+            errors.append(schema_error(field, reason))
 
     if not isinstance(t, dict):
-        return [dict(code="SCHEMA_INVALID", field="template")]
-    require(t.get("schema") == "quick-imposing/template@2", "template.schema")
+        return [schema_error("template", "must be an object")]
+    require(
+        t.get("schema") == "quick-imposing/template@2",
+        "template.schema",
+        "must be quick-imposing/template@2",
+    )
     require(
         name_valid(t.get("name")) and (folder is None or t.get("name") == folder),
         "template.name",
+        "must be a valid folder name matching the template folder",
     )
-    require(t.get("base") == "base.pdf", "template.base")
+    require(t.get("base") == "base.pdf", "template.base", "must be base.pdf")
     c = t.get("cell", {})
     g = t.get("grid", {})
     if not isinstance(c, dict):
         c = {}
     if not isinstance(g, dict):
         g = {}
-    require(pair(c.get("size_mm"), True), "cell.size_mm")
+    require(
+        pair(c.get("size_mm"), True),
+        "cell.size_mm",
+        "must be two positive numbers",
+    )
     require(
         type(c.get("rotation_deg")) == int and c["rotation_deg"] in (0, 90, -90, 180),
         "cell.rotation_deg",
+        "must be 0, 90, -90 or 180",
     )
-    require(pair(g.get("origin_mm")), "grid.origin_mm")
+    require(pair(g.get("origin_mm")), "grid.origin_mm", "must be two numbers")
     require(
         pair(g.get("pitch_mm")) and all(v >= 0 for v in g["pitch_mm"]),
         "grid.pitch_mm",
+        "must be two numbers, not negative",
     )
     require(
         isinstance(g.get("count"), list)
         and len(g["count"]) == 2
         and all(type(v) == int and v > 0 for v in g["count"]),
         "grid.count",
+        "must be two positive integers",
     )
-    require(t.get("fill_direction") in ("forward", "reverse"), "fill_direction")
+    require(
+        t.get("fill_direction") in ("forward", "reverse"),
+        "fill_direction",
+        "must be forward or reverse",
+    )
     fields = t.get("text_fields")
-    require(isinstance(fields, list), "text_fields")
+    require(isinstance(fields, list), "text_fields", "must be a list")
     ids = set()
     for f in fields if isinstance(fields, list) else []:
         if not isinstance(f, dict):
-            require(False, "text_fields")
+            require(False, "text_fields", "each entry must be an object")
             continue
         id = f.get("id")
         valid = isinstance(id, str) and bool(id)
-        require(valid and id not in ids, "text_fields.id")
+        require(
+            valid and id not in ids,
+            "text_fields.id",
+            "must be a nonempty string, unique in the template",
+        )
         if valid:
             ids.add(id)
-        require(number(f.get("x_mm")) and number(f.get("y_mm")), "text_fields.position")
-        require(number(f.get("size_pt")) and f["size_pt"] > 0, "text_fields.size_pt")
-        require(isinstance(f.get("font"), str) and bool(f["font"]), "text_fields.font")
+        require(
+            number(f.get("x_mm")) and number(f.get("y_mm")),
+            "text_fields.position",
+            "x_mm and y_mm must be numbers",
+        )
+        require(
+            number(f.get("size_pt")) and f["size_pt"] > 0,
+            "text_fields.size_pt",
+            "must be a positive number",
+        )
+        require(
+            isinstance(f.get("font"), str) and bool(f["font"]),
+            "text_fields.font",
+            "must be a nonempty font name",
+        )
     return errors
 
 
 def project_errors(project):
     if not isinstance(project, dict):
-        return [dict(code="SCHEMA_INVALID", field="project")]
+        return [schema_error("project", "must be an object")]
     errors = []
 
-    def require(ok, field):
+    def require(ok, field, reason):
         if not ok:
-            errors.append(dict(code="SCHEMA_INVALID", field=field))
+            errors.append(schema_error(field, reason))
 
-    require(project.get("schema") == "quick-imposing/project@1", "project.schema")
-    require(name_valid(project.get("template")), "project.template")
+    require(
+        project.get("schema") == "quick-imposing/project@1",
+        "project.schema",
+        "must be quick-imposing/project@1",
+    )
+    require(
+        name_valid(project.get("template")),
+        "project.template",
+        "must be a valid template name",
+    )
     texts = project.get("texts")
     require(
         isinstance(texts, dict) and all(isinstance(v, str) for v in texts.values()),
         "project.texts",
+        "must be an object of strings",
     )
     placements = project.get("placements")
-    require(isinstance(placements, list), "project.placements")
+    require(isinstance(placements, list), "project.placements", "must be a list")
     cells = set()
     orders = set()
     for item in placements if isinstance(placements, list) else []:
         if not isinstance(item, dict):
-            require(False, "placements")
+            require(False, "placements", "each entry must be an object")
             continue
         cell, order = item.get("cell"), item.get("order")
-        require(type(cell) == int and cell > 0 and cell not in cells, "placements.cell")
         require(
-            type(order) == int and order > 0 and order not in orders, "placements.order"
+            type(cell) == int and cell > 0 and cell not in cells,
+            "placements.cell",
+            "must be a positive integer, one placement per cell",
+        )
+        require(
+            type(order) == int and order > 0 and order not in orders,
+            "placements.order",
+            "must be a positive integer, unique in the project",
         )
         if type(cell) == int:
             cells.add(cell)
         if type(order) == int:
             orders.add(order)
-        require(relative_path(item.get("file")), "placements.file")
+        require(
+            relative_path(item.get("file")),
+            "placements.file",
+            "must be a nonempty relative path",
+        )
     return errors
 
 

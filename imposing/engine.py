@@ -4,7 +4,6 @@ from contextlib import ExitStack
 from datetime import datetime, timezone
 import copy
 import json
-import os
 from pathlib import Path
 import shutil
 import tempfile
@@ -12,7 +11,14 @@ import tempfile
 import pikepdf as p
 
 from . import fonts
-from .model import cells, overlap_pairs, template_errors, project_errors
+from .model import (
+    PathError,
+    cells,
+    overlap_pairs,
+    project_errors,
+    relative_file,
+    template_errors,
+)
 from .pdf import MM, digest, streams, remove_illustrator, save, render, check
 
 
@@ -106,8 +112,9 @@ def generate(project_file, templates_root, output, font_dirs=()):
         ],
     )
 
-    def fail(code, **context):
-        report["errors"].append(dict(code=code, **context))
+    def fail(code, reason, **context):
+        # Every error entry is {code, reason, ...context} (SPEC §6.4).
+        report["errors"].append(dict(code=code, reason=reason, **context))
 
     for path in (output, saved_project, report_file, output.with_suffix(".png")):
         if path.exists():
@@ -123,19 +130,23 @@ def generate(project_file, templates_root, output, font_dirs=()):
     try:
         project = json.loads(project_file.read_text(encoding="utf-8"))
     except (ValueError, OSError) as exc:
-        fail("SCHEMA_INVALID", reason=str(exc))
+        fail("SCHEMA_INVALID", str(exc))
         return finish()
     report["errors"] += project_errors(project)
     if report["errors"]:
         return finish()
     folder = Path(templates_root).resolve() / project["template"]
     if not (folder / "template.json").is_file():
-        fail("TEMPLATE_NOT_FOUND", template=project["template"])
+        fail(
+            "TEMPLATE_NOT_FOUND",
+            f"Template not found: {project['template']}",
+            template=project["template"],
+        )
         return finish()
     try:
         template = json.loads((folder / "template.json").read_text(encoding="utf-8"))
     except (ValueError, OSError) as exc:
-        fail("SCHEMA_INVALID", reason=str(exc))
+        fail("SCHEMA_INVALID", str(exc))
         return finish()
     report["errors"] += template_errors(template, folder.name)
     if report["errors"]:
@@ -150,7 +161,11 @@ def generate(project_file, templates_root, output, font_dirs=()):
         report["warnings"].append(dict(code="CELL_OVERLAP", cells=overlaps))
     for placement in project["placements"]:
         if placement["cell"] not in positions:
-            fail("CELL_NOT_IN_TEMPLATE", cell=placement["cell"])
+            fail(
+                "CELL_NOT_IN_TEMPLATE",
+                f"Cell is not in the template: {placement['cell']}",
+                cell=placement["cell"],
+            )
     for id in project["texts"]:
         if id not in {field["id"] for field in template["text_fields"]}:
             report["info"].append(dict(code="TEXT_FIELD_UNKNOWN", id=id))
@@ -159,7 +174,7 @@ def generate(project_file, templates_root, output, font_dirs=()):
         try:
             locations[field["font"]] = fonts.resolve(field["font"], font_dirs)
         except fonts.FontError as exc:
-            fail("FONT_NOT_FOUND", font=field["font"], reason=str(exc))
+            fail(exc.code, str(exc), font=field["font"])
     if report["errors"]:
         return finish()
     base = folder / "base.pdf"
@@ -176,7 +191,7 @@ def generate(project_file, templates_root, output, font_dirs=()):
     try:
         report["inputs"] = {str(path): digest(path) for path in all_inputs}
     except OSError as exc:
-        fail("SCHEMA_INVALID", reason=str(exc))
+        fail("SCHEMA_INVALID", str(exc))
         return finish()
     if any(path in all_inputs for path in (output, saved_project, report_file)):
         raise ValueError("Output aliases an input")
@@ -210,7 +225,7 @@ def generate(project_file, templates_root, output, font_dirs=()):
                 source_docs[name] = src
                 sources_by_path[path] = src
         except (p.PdfError, OSError, ValueError, IndexError) as exc:
-            fail("SCHEMA_INVALID", reason=str(exc))
+            fail("SCHEMA_INVALID", str(exc))
             return finish()
         if "/XObject" not in page.Resources:
             page.Resources.XObject = p.Dictionary()
@@ -298,7 +313,7 @@ def generate(project_file, templates_root, output, font_dirs=()):
                 page.Resources.Font[key] = obj
                 embedded[font] = (key, mapping, metrics)
         except fonts.FontError as exc:
-            fail("SCHEMA_INVALID", reason=str(exc))
+            fail(exc.code, str(exc), font=font, **exc.context)
             return finish()
         text_commands = []
         for field in active:
@@ -339,20 +354,24 @@ def generate(project_file, templates_root, output, font_dirs=()):
             try:
                 qpdf_warnings = check(result)
             except RuntimeError as exc:
-                fail("PDF_VALIDATION_FAILED", reason=str(exc))
+                fail("PDF_VALIDATION_FAILED", str(exc))
                 return finish()
             render(result, tmp / "preview", 150)
             revised = copy.deepcopy(project)
-            for item in revised["placements"]:
-                item["file"] = Path(
-                    os.path.relpath(paths[item["file"]], saved_project.parent)
-                ).as_posix()
+            try:
+                for item in revised["placements"]:
+                    item["file"] = relative_file(
+                        paths[item["file"]], saved_project.parent
+                    )
+            except PathError as exc:
+                fail(exc.code, str(exc))
+                return finish()
             (tmp / "project.json").write_text(
                 json.dumps(revised, ensure_ascii=False, indent=2) + "\n",
                 encoding="utf-8",
             )
             if not all(digest(path) == sha for path, sha in report["inputs"].items()):
-                fail("INPUT_CHANGED")
+                fail("INPUT_CHANGED", "An input file changed during the build")
                 return finish()
             shutil.move(result, output)
             shutil.move(tmp / "preview.png", output.with_suffix(".png"))
