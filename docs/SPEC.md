@@ -329,6 +329,7 @@ quick-imposing/
 │  ├─ CLI-TEST-GUIDE.md          ← 명령행 도구 직접 테스트 가이드
 │  ├─ UI-DESIGN.md               ← GUI 구성·배포 결정
 │  ├─ DEVELOPMENT.md             ← 소스 실행, 명령행 도구, 테스트
+│  ├─ REFACTORING.md             ← 리팩토링 제안과 진행 상황
 │  └─ HANDOFF-*.md               ← 세션 인계 기록
 ├─ PR/                           ← 변경 제안·검토 기록 (PR/README.md)
 ├─ imposing/                     ← 배치 엔진과 명령행 도구

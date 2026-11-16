@@ -129,6 +129,7 @@
 |---|---|
 | [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md) | 소스로 실행하기, 명령행 도구(`create-template`, `build`, `autofill`), 테스트 |
 | [docs/HANDOFF-2026-11-13.md](docs/HANDOFF-2026-11-13.md) | 새 버전 빌드 · 배포 절차(`packaging\build.ps1`), 현재 상태와 미결 사항 |
+| [docs/REFACTORING.md](docs/REFACTORING.md) | 리팩토링 제안과 진행 상황 |
 | [docs/UI-DESIGN.md](docs/UI-DESIGN.md) | 화면 구성과 배포 방식의 결정 근거 |
 | [docs/SPEC.md](docs/SPEC.md), [docs/TEMPLATE-REQUIREMENTS.md](docs/TEMPLATE-REQUIREMENTS.md) | 배치 규칙과 요구사항 |
 
