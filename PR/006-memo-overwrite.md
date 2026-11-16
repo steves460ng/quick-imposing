@@ -42,7 +42,7 @@ Linux(Python 3.13, qpdf, poppler-utils, Noto Sans CJK KR, Qt offscreen).
 - 덮어쓰기: 덮어쓰기 없이 거부(`OUTPUT_EXISTS`), 네 파일 모두 교체 · 임시 파일 없음, 실패하면 기존 네 파일 바이트 그대로, 잠긴 파일 안내(`OUTPUT_LOCKED`) · 기존 PDF 그대로, 엔진 `overwrite` · 폴더 거부, 작업 프로그램에서 덮어쓰기 선택, 대화상자 버튼과 기본 버튼.
 - 기존 `tests/test_gui.py`의 같은 이름 저장 검사를 새 대화상자(다른 이름 · 취소)에 맞췄다.
 
-**Windows 검증은 아직 하지 않았다.** 병합 전에 이 브랜치로 `windows` 워크플로를 수동 실행한다. 특히 Windows의 `os.replace`가 열린 파일에서 `PermissionError`를 내는지(Acrobat 등이 연 PDF)는 Linux 테스트로 흉내만 냈다.
+**Windows 검증 통과 (2026-11-16).** 이 브랜치는 push로 워크플로가 돌지 않아 수동 실행했다. [실행 43827069706](https://github.com/steves460ng/quick-imposing/actions/runs/43827069706)(`bb0ac94`), [실행 43827933067](https://github.com/steves460ng/quick-imposing/actions/runs/43827933067)(`33c5f9c`, `--overwrite` 포함) 모두 전 단계 성공: pytest, 3-1차 · 3-2차 실행기, 맑은 고딕 · 한글 경로, GUI 시작 점검, 배포 빌드와 시작 점검, PowerShell 5.1. 열린 PDF에서 `os.replace`가 `PermissionError`를 내는지(Acrobat 등)는 CI에서 확인하지 않았다. 실제 PC에서 확인할 항목이다.
 
 ## 문서와 다르게 처리한 부분 · 알아 둘 점
 
