@@ -55,7 +55,7 @@ Linux(Python 3.13, qpdf, poppler-utils, Noto Sans CJK KR, Qt offscreen)에서 �
 - `tests/test_different_drive.py`: `os.path.relpath`를 Windows처럼 실패하는 함수로 바꿔 끼워 `relative_file`, `generate()`, `autofill()`, `Session.to_project()` · `save()`를 확인한다.
 - `tests/test_project.py`: 형식 검사 오류 전부에 `field` · `reason`이 있는지, 엔진 오류(`TEMPLATE_NOT_FOUND`, `CELL_NOT_IN_TEMPLATE`)에 `reason`이 있는지.
 
-**Windows 검증은 아직 하지 않았다.** `windows` 워크플로는 push 대상이 `ccr-**` · `release/**` 브랜치뿐이라 이 브랜치(`claude/…`) push로는 돌지 않는다. 병합 전에 GitHub Actions에서 이 브랜치를 골라 수동 실행(`workflow_dispatch`)하고 통과를 확인한다.
+**Windows 검증 통과 (2026-11-16).** `windows` 워크플로는 push 대상이 `ccr-**` · `release/**` 브랜치뿐이라, 이 브랜치는 수동 실행(`workflow_dispatch`)했다. [실행 43824610966](https://github.com/steves460ng/quick-imposing/actions/runs/43824610966), 커밋 `e3e7c28`: pytest, 3-1차 · 3-2차 실행기, 맑은 고딕 · 한글 경로, GUI 시작 점검(소스), 배포 폴더 빌드와 시작 점검(`build.ps1`), PowerShell 5.1 스크립트 읽기 모두 성공(약 6분).
 
 ## 문서와 다르게 처리한 부분
 
