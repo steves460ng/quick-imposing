@@ -6,7 +6,7 @@ import os
 from pathlib import Path
 import re
 
-from .model import project_errors, template_errors
+from .model import PathError, project_errors, relative_file, template_errors
 
 
 def absolute(path):
@@ -191,12 +191,10 @@ def autofill(
         # same B target, including missing files that continue to occupy cells.
         for item in revised["placements"]:
             old_file = absolute(input_project.parent / item["file"])
-            item["file"] = Path(os.path.relpath(old_file, output.parent)).as_posix()
-        rebased = [
-            Path(os.path.relpath(path, output.parent)).as_posix() for path in selected
-        ]
-    except ValueError as exc:  # e.g. no relative path between Windows drives
-        error("SCHEMA_INVALID", str(exc))
+            item["file"] = relative_file(old_file, output.parent)
+        rebased = [relative_file(path, output.parent) for path in selected]
+    except PathError as exc:
+        error(exc.code, str(exc))
         return finish()
     occupied = {item["cell"] for item in data["placements"]}
     next_order = max((item["order"] for item in data["placements"]), default=0) + 1

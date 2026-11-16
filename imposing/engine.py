@@ -4,7 +4,6 @@ from contextlib import ExitStack
 from datetime import datetime, timezone
 import copy
 import json
-import os
 from pathlib import Path
 import shutil
 import tempfile
@@ -12,7 +11,14 @@ import tempfile
 import pikepdf as p
 
 from . import fonts
-from .model import cells, overlap_pairs, template_errors, project_errors
+from .model import (
+    PathError,
+    cells,
+    overlap_pairs,
+    project_errors,
+    relative_file,
+    template_errors,
+)
 from .pdf import MM, digest, streams, remove_illustrator, save, render, check
 
 
@@ -343,10 +349,14 @@ def generate(project_file, templates_root, output, font_dirs=()):
                 return finish()
             render(result, tmp / "preview", 150)
             revised = copy.deepcopy(project)
-            for item in revised["placements"]:
-                item["file"] = Path(
-                    os.path.relpath(paths[item["file"]], saved_project.parent)
-                ).as_posix()
+            try:
+                for item in revised["placements"]:
+                    item["file"] = relative_file(
+                        paths[item["file"]], saved_project.parent
+                    )
+            except PathError as exc:
+                fail(exc.code, reason=str(exc))
+                return finish()
             (tmp / "project.json").write_text(
                 json.dumps(revised, ensure_ascii=False, indent=2) + "\n",
                 encoding="utf-8",

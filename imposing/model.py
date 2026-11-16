@@ -2,7 +2,16 @@
 
 import math
 import ntpath
+import os
 from pathlib import Path
+
+
+class PathError(ValueError):
+    """A path cannot be stored; ``code`` is the report error code."""
+
+    def __init__(self, message, code):
+        super().__init__(message)
+        self.code = code
 
 
 def number(value):
@@ -36,6 +45,20 @@ def relative_path(value):
         and not ntpath.isabs(value)
         and not ntpath.splitdrive(value)[0]
     )
+
+
+def relative_file(path, folder):
+    """``path`` relative to ``folder`` in POSIX form, as stored in project@1.
+
+    Raises PathError("DIFFERENT_DRIVE") when no relative path exists, i.e. the
+    two are on different Windows drives.
+    """
+    try:
+        return Path(os.path.relpath(path, folder)).as_posix()
+    except ValueError as exc:
+        raise PathError(
+            f"No relative path from {folder} to {path}: {exc}", "DIFFERENT_DRIVE"
+        ) from None
 
 
 def template_errors(t, folder=None):

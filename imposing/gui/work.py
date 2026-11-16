@@ -47,6 +47,7 @@ ERROR_TEXT = {
     "FONT_UNSUPPORTED": "지원하지 않는 형식의 글꼴입니다: {font}\n템플릿의 글꼴을 TrueType 또는 CID 방식 글꼴로 바꾸세요.",
     "PDF_VALIDATION_FAILED": "만든 PDF가 검사를 통과하지 못했습니다.\n{reason}",
     "INPUT_CHANGED": "저장하는 동안 입력 파일이 바뀌었습니다. 다시 저장하세요.",
+    "DIFFERENT_DRIVE": "데이터와 저장 위치는 같은 드라이브에 있어야 합니다.\n데이터가 있는 드라이브에 저장하세요.",
 }
 
 
