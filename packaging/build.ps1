@@ -7,7 +7,7 @@
     1. qpdf, Poppler가 bin\ 에 없으면 GitHub Releases에서 내려받는다
     2. Python 패키지와 PyInstaller를 설치한다 (.venv가 있으면 그것을 쓴다)
     3. dist\QuickImposing\ 을 새로 빌드한다
-    4. bin\ 과 사용설명서를 배포 폴더에 넣는다
+    4. bin\, 사용설명서, 라이선스(LICENSE.txt, THIRD-PARTY-LICENSES\)를 배포 폴더에 넣는다
     5. 두 프로그램이 뜨는지 시작 점검을 한다
     6. dist\QuickImposing-<버전>.zip 을 만든다
 
@@ -140,6 +140,11 @@ $guide = $guide.Substring(0, $cut).TrimEnd().Replace("](docs/images/", "](images
 Set-Content (Join-Path $dist "사용설명서.md") $guide -Encoding UTF8
 if (Test-Path docs\images) { Copy-Item docs\images (Join-Path $dist "images") -Recurse -Force }
 Set-Content (Join-Path $dist "VERSION.txt") $version -Encoding ascii
+# 라이선스: 퀵 임포징(MIT)과 함께 들어가는 구성 요소(Python 패키지, Python, qpdf, Poppler)
+Copy-Item LICENSE (Join-Path $dist "LICENSE.txt")
+& $python packaging\collect_licenses.py --out (Join-Path $dist "THIRD-PARTY-LICENSES") `
+    --tool "qpdf=bin\qpdf\qpdf.exe" --tool "poppler=bin\poppler\pdftoppm.exe" --search tools
+if ($LASTEXITCODE -ne 0) { Fail "서드파티 라이선스 모으기" }
 
 # ---------------------------------------------------------------- 5. 시작 점검
 Step "시작 점검"
@@ -161,7 +166,7 @@ foreach ($name in "QuickImposing", "QuickImposingEditor") {
         $failed = $true
     }
 }
-foreach ($required in "bin\qpdf\qpdf.exe", "bin\poppler\pdftoppm.exe", "_internal\imposing\gui\assets\work.ico", "사용설명서.md", "images\work.png") {
+foreach ($required in "bin\qpdf\qpdf.exe", "bin\poppler\pdftoppm.exe", "_internal\imposing\gui\assets\work.ico", "사용설명서.md", "images\work.png", "LICENSE.txt", "THIRD-PARTY-LICENSES\README.md") {
     if (-not (Test-Path (Join-Path $dist $required))) {
         Write-Host "  없음: $required" -ForegroundColor Red
         $failed = $true
