@@ -262,22 +262,26 @@ class Session:
             placements=placements,
         )
 
-    def save(self, pdf_path, font_dirs=()):
+    def save(self, pdf_path, font_dirs=(), overwrite=False):
         """Build the PDF, project, preview and report next to ``pdf_path``.
 
-        Existing output files are never overwritten. Returns the build report;
+        Existing output files are refused unless ``overwrite`` is true; then
+        they are replaced only when the build passes, and a failed build
+        leaves them as they were. Returns the build report;
         ``report["status"]`` is "PASS" when the PDF was written.
         """
         pdf_path = Path(os.path.abspath(pdf_path))
         if pdf_path.suffix.lower() != ".pdf":
             pdf_path = pdf_path.with_name(pdf_path.name + ".pdf")
         existing = [path for path in output_files(pdf_path) if path.exists()]
-        if existing:
+        if existing and not overwrite:
             raise SessionError(
                 "같은 이름의 파일이 이미 있습니다. 다른 이름으로 저장하세요.\n"
                 + "\n".join(path.name for path in existing),
                 "OUTPUT_EXISTS",
             )
+        report_path = pdf_path.with_suffix(".report.json")
+        had_report = report_path.exists()
         project = self.to_project(pdf_path.parent)
         staged = pdf_path.with_name(f"~{pdf_path.stem}.{os.getpid()}.input.json")
         try:
@@ -286,7 +290,14 @@ class Session:
                 json.dumps(project, ensure_ascii=False, indent=2) + "\n",
                 encoding="utf-8",
             )
-            report = generate(staged, self.root, pdf_path, font_dirs)
+            report = generate(staged, self.root, pdf_path, font_dirs, overwrite)
+        except PermissionError as exc:
+            raise SessionError(
+                "저장하지 못했습니다. 같은 이름의 파일이 다른 프로그램"
+                "(PDF 뷰어, Illustrator 등)에서 열려 있으면 닫고 다시 저장하세요.\n"
+                f"{exc}",
+                "OUTPUT_LOCKED",
+            ) from None
         except (OSError, ValueError, RuntimeError) as exc:
             raise SessionError(f"저장하지 못했습니다.\n{exc}") from None
         finally:
@@ -294,8 +305,9 @@ class Session:
         if report["status"] == "PASS":
             self.project_path = pdf_path.with_suffix(".qiproj.json")
             self.dirty = False
-        else:
+        elif not had_report:
             # A failed build leaves only its report; remove it so the same
-            # name can be used again once the cause is fixed.
-            pdf_path.with_suffix(".report.json").unlink(missing_ok=True)
+            # name can be used again once the cause is fixed. A report that
+            # was already there belongs to the existing PDF and is kept.
+            report_path.unlink(missing_ok=True)
         return report

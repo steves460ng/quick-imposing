@@ -158,9 +158,14 @@ def test_work_program_flow(app, dialogs, root, tmp_path):
     window.save_pdf(str(target))
     assert target.is_file() and dialogs[-1][0] == "box"
     assert not window.session.dirty
-    # Same name again: existing files stay, the next free name is used.
+    # Same name again: the user chooses. "rename" keeps the existing files and
+    # uses the next free name; cancel writes nothing.
+    window._ask_existing = lambda target, existing: "rename"
     window.save_pdf(str(target))
     assert (tmp_path / "작업" / "전면-01-2.pdf").is_file()
+    window._ask_existing = lambda target, existing: None
+    window.save_pdf(str(target))
+    assert not (tmp_path / "작업" / "전면-01-3.pdf").exists()
 
     other = WorkWindow(root)
     other.open_project(str(target.with_suffix(".qiproj.json")))
