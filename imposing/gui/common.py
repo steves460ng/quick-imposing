@@ -38,6 +38,7 @@ FILLED = QColor("#5b6470")
 SELECT = QColor("#ff7a00")
 MISSING = QColor("#b9bec6")
 REQUIRED_TOOLS = ("qpdf", "pdftoppm")
+REPOSITORY_URL = "https://github.com/steves460ng/quick-imposing"
 
 STYLE = """
 QPushButton#primary {
@@ -104,6 +105,61 @@ def self_test(window_class):
         # A windowed program has no console; leave the reason in a file.
         Path("selftest-error.txt").write_text(traceback.format_exc(), encoding="utf-8")
         return 2
+
+
+def app_version():
+    """The program version, or None when it cannot be found.
+
+    Packaged builds read VERSION.txt next to the exe (written by build.ps1).
+    Source runs read pyproject.toml, which is newer than installed metadata
+    after a version bump without reinstalling; the metadata is the fallback.
+    """
+    candidates = []
+    if getattr(sys, "frozen", False):
+        candidates.append(Path(sys.executable).resolve().parent / "VERSION.txt")
+    for file in candidates:
+        try:
+            text = file.read_text(encoding="utf-8").strip()
+        except OSError:
+            continue
+        if text:
+            return text
+    project = Path(__file__).resolve().parents[2] / "pyproject.toml"
+    try:
+        import tomllib
+
+        with project.open("rb") as stream:
+            data = tomllib.load(stream)
+        if data.get("project", {}).get("name") == "quick-imposing":
+            return data["project"]["version"]
+    except (OSError, ValueError, KeyError, ImportError):
+        pass
+    try:
+        from importlib.metadata import PackageNotFoundError, version
+
+        return version("quick-imposing")
+    except PackageNotFoundError:
+        return None
+
+
+def about_box(parent, program):
+    """The "프로그램 정보" dialog: program name, version and repository link."""
+    version = app_version() or "알 수 없음"
+    box = QMessageBox(parent)
+    box.setWindowTitle("프로그램 정보")
+    icon = QApplication.windowIcon()
+    if not icon.isNull():
+        box.setIconPixmap(icon.pixmap(64, 64))
+    box.setTextFormat(Qt.RichText)
+    box.setText(
+        f"<b>퀵 임포징</b> — {program}<br><br>"
+        f"버전 {version}<br>"
+        f'<a href="{REPOSITORY_URL}">{REPOSITORY_URL}</a>'
+    )
+    # Clicking the link opens it in the default browser.
+    box.setTextInteractionFlags(Qt.TextBrowserInteraction)
+    box.setStandardButtons(QMessageBox.Ok)
+    return box
 
 
 def create_application(name, icon=None):

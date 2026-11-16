@@ -28,6 +28,7 @@ from .. import store
 from ..session import Session, SessionError, free_output_path, output_files
 from .common import (
     SheetView,
+    about_box,
     Thumbs,
     create_application,
     number_text,
@@ -239,6 +240,10 @@ class WorkWindow(QMainWindow):
         menu.addAction(action)
         action = QAction("템플릿 목록 새로 고침", self, shortcut=QKeySequence.Refresh)
         action.triggered.connect(self.refresh_templates)
+        menu.addAction(action)
+        menu.addSeparator()
+        action = QAction("프로그램 정보(&A)…", self)
+        action.triggered.connect(self.show_about)
         menu.addAction(action)
 
     # -- templates --------------------------------------------------------
@@ -627,6 +632,9 @@ class WorkWindow(QMainWindow):
         if clicked is rename:
             return "rename"
         return None
+
+    def show_about(self):
+        about_box(self, "작업").exec()
 
     def _default_folder(self):
         if self.session.project_path:
