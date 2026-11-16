@@ -55,8 +55,7 @@ def describe_error(entry):
     """One Korean sentence for a build report error entry."""
     code = entry.get("code", "")
     if code == "SCHEMA_INVALID":
-        reason = entry.get("reason") or entry.get("field") or ""
-        return f"입력을 처리할 수 없습니다.\n{reason}"
+        return f"입력을 처리할 수 없습니다.\n{entry.get('reason', '')}"
     template = ERROR_TEXT.get(code)
     if template is None:
         return f"{code} {entry}"

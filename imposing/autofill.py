@@ -107,10 +107,8 @@ def autofill(
         return result
 
     def schema_errors(errors):
-        for entry in errors:
-            error(
-                entry["code"], f"Invalid field: {entry['field']}", field=entry["field"]
-            )
+        # model entries already have the report form {code, reason, field}.
+        result["errors"].extend(errors)
 
     if output.exists() or output.is_symlink():
         error("SCHEMA_INVALID", f"Output project already exists: {output}")

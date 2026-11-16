@@ -313,7 +313,13 @@ def test_negative_pitch_rejected(prepared, tmp_path, pitch):
     tf.write_text(json.dumps(t))
     r = generate(path, root, tmp_path / "out/result.pdf")
     assert r["status"] == "FAIL"
-    assert r["errors"] == [dict(code="SCHEMA_INVALID", field="grid.pitch_mm")]
+    assert r["errors"] == [
+        dict(
+            code="SCHEMA_INVALID",
+            reason="grid.pitch_mm: must be two numbers, not negative",
+            field="grid.pitch_mm",
+        )
+    ]
     assert not (tmp_path / "out/result.pdf").exists()
 
 
@@ -427,3 +433,44 @@ def test_error_reports_use_output_stem_and_refuse_overwrite(tmp_path):
             tmp_path / "missing.json", tmp_path / "templates", folder / "front-01.pdf"
         )
     assert {p.name: p.read_bytes() for p in folder.iterdir()} == before
+
+
+def test_every_schema_error_has_reason_and_field():
+    # REFACTORING R5: one entry form {code, reason, field?} for every error.
+    broken_template = dict(
+        schema="x",
+        name="a/b",
+        base="x.pdf",
+        cell=dict(size_mm=[0, 1], rotation_deg=45),
+        grid=dict(origin_mm=None, pitch_mm=[-1, 0], count=[0, 1]),
+        fill_direction="up",
+        text_fields=[1, dict(id="")],
+    )
+    broken_project = dict(
+        schema="x", template="", texts=[], placements=[1, dict(cell=0, order=0)]
+    )
+    errors = (
+        template_errors(broken_template)
+        + project_errors(broken_project)
+        + template_errors(None)
+        + project_errors(None)
+    )
+    assert len(errors) > 15
+    for entry in errors:
+        assert entry["code"] == "SCHEMA_INVALID"
+        assert entry["field"] and entry["reason"].startswith(entry["field"] + ": ")
+
+
+def test_build_errors_all_have_reason(prepared, tmp_path):
+    root, path, pr = prepared
+    pr["placements"][0]["cell"] = 99
+    pr["template"] = "missing-template"
+    path.write_text(json.dumps(pr))
+    r = generate(path, root, tmp_path / "out/a.pdf")
+    assert [e["code"] for e in r["errors"]] == ["TEMPLATE_NOT_FOUND"]
+    pr["template"] = definition()["name"]
+    path.write_text(json.dumps(pr))
+    r2 = generate(path, root, tmp_path / "out/b.pdf")
+    assert [e["code"] for e in r2["errors"]] == ["CELL_NOT_IN_TEMPLATE"]
+    for entry in r["errors"] + r2["errors"]:
+        assert entry["reason"]
