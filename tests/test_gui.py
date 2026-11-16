@@ -197,7 +197,7 @@ def test_work_program_reports_errors(app, dialogs, root, tmp_path):
 
 def test_error_text():
     assert "셀 25" in describe_error(dict(code="CELL_NOT_IN_TEMPLATE", cell=25))
-    assert "글꼴" in describe_error(dict(code="SCHEMA_INVALID", reason="Font lacks characters: [1]"))
+    assert "글꼴" in describe_error(dict(code="FONT_GLYPH_MISSING", reason="x", font="F"))
     assert "X" in describe_error(dict(code="SCHEMA_INVALID", reason="X"))
 
 

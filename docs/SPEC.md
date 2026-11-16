@@ -203,6 +203,9 @@ y = origin_y + (r−1) × pitch_y
 | 프로젝트의 셀 번호가 현재 템플릿에 없음 | 오류, PDF를 만들지 않음 | `CELL_NOT_IN_TEMPLATE` |
 | 템플릿을 찾을 수 없음 | 오류 | `TEMPLATE_NOT_FOUND` |
 | 텍스트 글꼴을 찾을 수 없음 | 오류 | `FONT_NOT_FOUND` |
+| 텍스트에 글꼴에 없는 글자가 있음 | 오류. 빠진 글자를 `missing`에 기록 | `FONT_GLYPH_MISSING` |
+| 글꼴 라이선스가 임베드를 금지함(`OS/2 fsType` 제한) | 오류 | `FONT_EMBED_FORBIDDEN` |
+| 지원하지 않는 글꼴 형식(이름 기반 CFF) | 오류 | `FONT_UNSUPPORTED` |
 | 형식 오류, 필수 키 누락, 허용되지 않은 값, `order` 중복, 한 셀에 배정 2개 이상, 음수 피치, 열 수 없거나 1페이지가 아닌 PDF | 오류 | `SCHEMA_INVALID` + 사유 |
 | 생성 후 자체 검사 실패 (`qpdf --check` 오류(종료 코드 2), 입력 파일 해시 변경) | 오류 | `PDF_VALIDATION_FAILED`, `INPUT_CHANGED` |
 | 셀끼리 겹침 | 경고 후 진행 | `CELL_OVERLAP` (경고) |

@@ -42,6 +42,9 @@ ERROR_TEXT = {
     "CELL_NOT_IN_TEMPLATE": "현재 템플릿에 없는 셀이 있습니다: 셀 {cell}",
     "TEMPLATE_NOT_FOUND": "템플릿을 찾을 수 없습니다: {template}",
     "FONT_NOT_FOUND": "글꼴을 찾을 수 없습니다: {font}\n이 PC에 글꼴을 설치하거나 템플릿의 글꼴을 바꾸세요.",
+    "FONT_GLYPH_MISSING": "선택한 글꼴에 없는 글자가 있습니다. 입력한 텍스트나 템플릿의 글꼴을 확인하세요.",
+    "FONT_EMBED_FORBIDDEN": "PDF에 넣을 수 없는(임베드 금지) 글꼴입니다. 템플릿의 글꼴을 바꾸세요.",
+    "FONT_UNSUPPORTED": "지원하지 않는 형식의 글꼴입니다: {font}\n템플릿의 글꼴을 TrueType 또는 CID 방식 글꼴로 바꾸세요.",
     "PDF_VALIDATION_FAILED": "만든 PDF가 검사를 통과하지 못했습니다.\n{reason}",
     "INPUT_CHANGED": "저장하는 동안 입력 파일이 바뀌었습니다. 다시 저장하세요.",
 }
@@ -52,10 +55,6 @@ def describe_error(entry):
     code = entry.get("code", "")
     if code == "SCHEMA_INVALID":
         reason = entry.get("reason") or entry.get("field") or ""
-        if "lacks characters" in reason:
-            return "선택한 글꼴에 없는 글자가 있습니다. 입력한 텍스트나 템플릿의 글꼴을 확인하세요."
-        if "prohibits embedding" in reason:
-            return "PDF에 넣을 수 없는(임베드 금지) 글꼴입니다. 템플릿의 글꼴을 바꾸세요."
         return f"입력을 처리할 수 없습니다.\n{reason}"
     template = ERROR_TEXT.get(code)
     if template is None:

@@ -298,7 +298,7 @@ def generate(project_file, templates_root, output, font_dirs=()):
                 page.Resources.Font[key] = obj
                 embedded[font] = (key, mapping, metrics)
         except fonts.FontError as exc:
-            fail("SCHEMA_INVALID", reason=str(exc))
+            fail(exc.code, reason=str(exc), font=font, **exc.context)
             return finish()
         text_commands = []
         for field in active:
