@@ -389,6 +389,7 @@ quick-imposing/
 | v0.5 | 2026-11-10 | Illustrator 전용 편집 데이터 제거(R11)를 필수 요구사항으로 추가 |
 | v0.6 | 2026-11-11 | `docs/TEMPLATE-REQUIREMENTS.md` v0.3과 3-1차·3-2차 구현 결과에 맞춰 개정. 아래 규칙을 대체했다 |
 | v0.6.1 | 2026-11-12 | V1 기준 보완: `qpdf --check`의 경고(종료 코드 3)는 통과로 보고 리포트에 기록한다. 저장소 구조에 GUI·배포 구성 추가 |
+| v0.6.2 | 2026-11-16 | 리팩토링 1단계(`docs/REFACTORING.md` R1 · R3 · R5): §6.4에 오류 코드 `FONT_GLYPH_MISSING` · `FONT_EMBED_FORBIDDEN` · `FONT_UNSUPPORTED` · `DIFFERENT_DRIVE` 추가(이전에는 `SCHEMA_INVALID`), 모든 오류 항목을 `{code, reason, field?}` 형식으로 통일 |
 
 v0.6에서 대체한 규칙과 현행 규칙:
 

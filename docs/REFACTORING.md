@@ -233,11 +233,11 @@ diff before.qdf after.qdf    # 차이가 없어야 한다 (/CreationDate 등 제
 
 | # | 상태 | 커밋 · PR | 비고 |
 |---|---|---|---|
-| R1 | 제안 | — | |
+| R1 | 완료 (2026-11-16, 미병합) | `65c2119`, 브랜치 `claude/refactor-stage1`, `PR/005-refactoring.md` | 글꼴 오류 코드 3개 추가 |
 | R2 | 제안 | — | |
-| R3 | 제안 | — | |
+| R3 | 완료 (2026-11-16, 미병합) | `1c739a6`, 브랜치 `claude/refactor-stage1`, `PR/005-refactoring.md` | Linux에서 `relpath`를 바꿔 끼워 검증 |
 | R4 | 제안 | — | 베타 뒤 |
-| R5 | 제안 | — | |
+| R5 | 완료 (2026-11-16, 미병합) | `78c1be9`, 브랜치 `claude/refactor-stage1`, `PR/005-refactoring.md` |  |
 | R6 | 제안 | — | |
 | R7 | 제안 | — | |
 | R8 | 제안 | — | 베타 뒤 |
