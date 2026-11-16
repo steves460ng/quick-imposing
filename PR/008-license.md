@@ -2,7 +2,7 @@
 
 | 항목 | 내용 |
 |---|---|
-| 상태 | 검토 대기 |
+| 상태 | 병합됨 (2026-11-16, GitHub PR #18, 사용자 지시: Windows 확인 후 병합) |
 | 브랜치 | `claude/license` → `main` |
 | 기준 커밋 | main `073aba3` (0.7.0) |
 | 최신 커밋 | 브랜치 최신 |
@@ -32,7 +32,7 @@
 | `ruff check --select F imposing tests packaging/collect_licenses.py` | 문제 없음 |
 | Linux에서 스크립트 실행 | 구성 요소 10개, 모두 라이선스 문서 있음 |
 
-Windows 검증: 병합 전에 `windows` 워크플로를 수동 실행한다. 이 변경은 `build.ps1`을 바꾸므로 워크플로의 배포 빌드 단계가 실제 검증이다.
+Windows 검증 통과 (2026-11-16): [실행 43844642850](https://github.com/steves460ng/quick-imposing/actions/runs/43844642850)(`9d9216d`) 전 단계 성공. pytest 136 passed, 배포 빌드에서 라이선스 수집 16개 구성 요소 · 경고 없음, PySide6_Essentials · shiboken6에 LGPL-3.0 · GPL-3.0 문서 2개씩(Qt 상용 라이선스 문서 제외), qpdf 12.4.2 · Poppler 26.09.0은 배포 파일에서 찾은 문서 1개 + 표준 문서. 이전 실행 2건의 실패 원인은 아래 수정 내역.
 
 ## 알아 둘 점
 
