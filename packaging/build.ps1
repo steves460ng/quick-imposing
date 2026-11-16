@@ -7,7 +7,7 @@
     1. qpdf, Poppler가 bin\ 에 없으면 GitHub Releases에서 내려받는다
     2. Python 패키지와 PyInstaller를 설치한다 (.venv가 있으면 그것을 쓴다)
     3. dist\QuickImposing\ 을 새로 빌드한다
-    4. bin\ 과 사용설명서를 배포 폴더에 넣는다
+    4. bin\, 사용설명서, 라이선스(LICENSE.txt, THIRD-PARTY-LICENSES\)를 배포 폴더에 넣는다
     5. 두 프로그램이 뜨는지 시작 점검을 한다
     6. dist\QuickImposing-<버전>.zip 을 만든다
 
@@ -16,11 +16,13 @@
   .\packaging\build.ps1 -Test       # 빌드 전에 pytest도 돌린다 (Noto Sans CJK KR 글꼴 필요)
   .\packaging\build.ps1 -NoZip      # zip은 만들지 않는다
   .\packaging\build.ps1 -ToolsOnly  # qpdf, Poppler만 준비한다
+  .\packaging\build.ps1 -StrictLicenses  # 라이선스 문서가 없는 구성 요소가 있으면 빌드를 멈춘다
 #>
 param(
     [switch]$Test,
     [switch]$NoZip,
-    [switch]$ToolsOnly
+    [switch]$ToolsOnly,
+    [switch]$StrictLicenses
 )
 
 $ErrorActionPreference = "Stop"
@@ -140,6 +142,14 @@ $guide = $guide.Substring(0, $cut).TrimEnd().Replace("](docs/images/", "](images
 Set-Content (Join-Path $dist "사용설명서.md") $guide -Encoding UTF8
 if (Test-Path docs\images) { Copy-Item docs\images (Join-Path $dist "images") -Recurse -Force }
 Set-Content (Join-Path $dist "VERSION.txt") $version -Encoding ascii
+# 라이선스: 퀵 임포징(MIT)과 함께 들어가는 구성 요소(Python 패키지, Python, qpdf, Poppler)
+Copy-Item LICENSE (Join-Path $dist "LICENSE.txt")
+# 문서가 없는 구성 요소는 경고만 하고 README.md에 표시한다. -StrictLicenses면 멈춘다.
+$licenseArgs = @("--out", (Join-Path $dist "THIRD-PARTY-LICENSES"),
+    "--tool", "qpdf=bin\qpdf\qpdf.exe", "--tool", "poppler=bin\poppler\pdftoppm.exe", "--search", "tools")
+if ($StrictLicenses) { $licenseArgs += "--strict" }
+& $python packaging\collect_licenses.py @licenseArgs
+if ($LASTEXITCODE -ne 0) { Fail "서드파티 라이선스: 문서가 없는 구성 요소가 있습니다 (THIRD-PARTY-LICENSES\README.md)" }
 
 # ---------------------------------------------------------------- 5. 시작 점검
 Step "시작 점검"
@@ -161,7 +171,7 @@ foreach ($name in "QuickImposing", "QuickImposingEditor") {
         $failed = $true
     }
 }
-foreach ($required in "bin\qpdf\qpdf.exe", "bin\poppler\pdftoppm.exe", "_internal\imposing\gui\assets\work.ico", "사용설명서.md", "images\work.png") {
+foreach ($required in "bin\qpdf\qpdf.exe", "bin\poppler\pdftoppm.exe", "_internal\imposing\gui\assets\work.ico", "사용설명서.md", "images\work.png", "LICENSE.txt", "THIRD-PARTY-LICENSES\README.md") {
     if (-not (Test-Path (Join-Path $dist $required))) {
         Write-Host "  없음: $required" -ForegroundColor Red
         $failed = $true

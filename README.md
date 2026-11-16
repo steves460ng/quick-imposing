@@ -28,6 +28,7 @@
 - [자주 나오는 안내](#자주-나오는-안내)
 - [자주 묻는 질문](#자주-묻는-질문)
 - [문제 알리기](#문제-알리기)
+- [라이선스](#라이선스)
 
 ## 시작하기
 
@@ -206,6 +207,12 @@ PC 사용자마다 `%LOCALAPPDATA%\QuickImposing\templates`에 저장됩니다. 
 
 카드나 베이스 PDF에 고객 정보 같은 민감한 내용이 있으면 파일을 올리지 마세요.
 
+## 라이선스
+
+퀵 임포징은 [MIT 라이선스](https://github.com/steves460ng/quick-imposing/blob/main/LICENSE)로 공개합니다. 누구나 자유롭게 쓰고 고치고 다시 배포할 수 있으며, 저작권 표시와 라이선스 문구만 남기면 됩니다. 프로그램은 있는 그대로 제공되며 어떤 보증도 하지 않습니다.
+
+배포 폴더에는 함께 들어 있는 다른 프로젝트(Qt/PySide6, pikepdf, Pillow, fontTools, Python, qpdf, Poppler 등)의 라이선스가 `THIRD-PARTY-LICENSES` 폴더에 있습니다. 목록은 그 폴더의 `README.md`를 보세요. 배포 폴더를 다른 사람에게 줄 때는 `LICENSE.txt`와 `THIRD-PARTY-LICENSES` 폴더를 지우지 말고 그대로 함께 주세요.
+
 <!-- 여기부터는 배포본의 사용설명서에 넣지 않는다 (packaging/build.ps1) -->
 
 ## 개발 · 빌드
@@ -227,4 +234,8 @@ Windows 배포본(`dist\QuickImposing\`, `dist\QuickImposing-<버전>.zip`)은 P
 | [docs/REFACTORING.md](docs/REFACTORING.md) | 리팩토링 제안과 진행 상황 |
 | [PR/](PR/README.md) | 변경 제안 · 검토 기록 |
 
-배포본에는 [qpdf](https://github.com/qpdf/qpdf)(Apache License 2.0)와 [Poppler](https://poppler.freedesktop.org/)(GPL) 실행 파일이 함께 들어갑니다. 배포본을 다시 배포할 때는 두 도구의 라이선스 조건을 따라야 합니다.
+### 라이선스와 서드파티 고지
+
+- 소스 코드: [MIT](LICENSE) (Copyright (c) 2026 steves460ng)
+- 배포본: `build.ps1`이 `LICENSE.txt`와 `THIRD-PARTY-LICENSES\`를 넣습니다. [packaging/collect_licenses.py](packaging/collect_licenses.py)가 빌드에 쓴 Python 패키지(실행에 필요한 의존성 전체와 PyInstaller), Python, qpdf, Poppler의 라이선스 문서와 버전 표(`README.md`)를 모읍니다. 패키지에 라이선스 문서가 없으면(Qt/PySide6) [packaging/licenses/](packaging/licenses)의 표준 문서를 넣습니다. 그래도 문서가 없는 구성 요소는 경고만 하고 빌드를 계속하며, 표에 "라이선스 문서 없음"과 원문 주소를 적습니다. 밖으로 배포하기 전에는 `.\packaging\build.ps1 -StrictLicenses`로 빌드하면 그런 구성 요소가 있을 때 빌드를 멈춥니다.
+- 함께 배포하는 [qpdf](https://github.com/qpdf/qpdf)는 Apache License 2.0, [Poppler](https://poppler.freedesktop.org/)는 GPL, Qt/PySide6는 LGPL-3.0입니다. 배포본을 다시 배포할 때는 이 조건을 따라야 합니다(Poppler 소스 제공 안내는 `THIRD-PARTY-LICENSES\README.md`).
