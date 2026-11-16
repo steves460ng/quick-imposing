@@ -55,7 +55,7 @@ Linux(Python 3.13, qpdf, poppler-utils, Noto Sans CJK KR, Qt offscreen)에서 �
 - `tests/test_different_drive.py`: `os.path.relpath`를 Windows처럼 실패하는 함수로 바꿔 끼워 `relative_file`, `generate()`, `autofill()`, `Session.to_project()` · `save()`를 확인한다.
 - `tests/test_project.py`: 형식 검사 오류 전부에 `field` · `reason`이 있는지, 엔진 오류(`TEMPLATE_NOT_FOUND`, `CELL_NOT_IN_TEMPLATE`)에 `reason`이 있는지.
 
-**Windows 검증은 아직 하지 않았다.** 이 브랜치 push로 `windows` 워크플로가 도는지, 통과하는지 확인한 뒤 병합한다.
+**Windows 검증은 아직 하지 않았다.** `windows` 워크플로는 push 대상이 `ccr-**` · `release/**` 브랜치뿐이라 이 브랜치(`claude/…`) push로는 돌지 않는다. 병합 전에 GitHub Actions에서 이 브랜치를 골라 수동 실행(`workflow_dispatch`)하고 통과를 확인한다.
 
 ## 문서와 다르게 처리한 부분
 
