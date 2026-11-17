@@ -344,7 +344,6 @@ quick-imposing/
 │  ├─ DEVELOPMENT.md             ← 소스 실행, 명령행 도구, 테스트
 │  ├─ REFACTORING.md             ← 리팩토링 제안과 진행 상황
 │  └─ HANDOFF-*.md               ← 세션 인계 기록
-├─ PR/                           ← 변경 제안·검토 기록 (PR/README.md)
 ├─ imposing/                     ← 배치 엔진과 명령행 도구
 │  └─ gui/                       ← 템플릿 편집기와 작업 프로그램 (docs/UI-DESIGN.md)
 ├─ packaging/, .github/workflows/ ← 배포 폴더 빌드와 Windows 검증
@@ -395,6 +394,7 @@ quick-imposing/
 | v0.5 | 2026-11-10 | Illustrator 전용 편집 데이터 제거(R11)를 필수 요구사항으로 추가 |
 | v0.6 | 2026-11-11 | `docs/TEMPLATE-REQUIREMENTS.md` v0.3과 3-1차·3-2차 구현 결과에 맞춰 개정. 아래 규칙을 대체했다 |
 | v0.6.1 | 2026-11-12 | V1 기준 보완: `qpdf --check`의 경고(종료 코드 3)는 통과로 보고 리포트에 기록한다. 저장소 구조에 GUI·배포 구성 추가 |
+| v0.7.2 | 2026-11-17 | `PR/` 기록 디렉토리 삭제(변경 기록은 GitHub PR로). §10 저장소 구조 갱신 |
 | v0.7.1 | 2026-11-17 | 저장소 정리: 2차 테스트 명세 `docs/TEST-02.md`(2026-11-17 삭제, 내용은 커밋 `2d84f9c`에서 볼 수 있음)와 픽스처 `samples/templates/`, `samples/expected/`(`template@1`), 쓰지 않는 `requirements.txt` 삭제. §10 저장소 구조 갱신 |
 | v0.7 | 2026-11-16 | 템플릿 메모(`memo`, 선택 키) 추가(§6.1). 작업 프로그램의 확인 후 덮어쓰기 저장, 명령행 `build --overwrite` 추가(§7.3) |
 | v0.6.2 | 2026-11-16 | 리팩토링 1단계(`docs/REFACTORING.md` R1 · R3 · R5): §6.4에 오류 코드 `FONT_GLYPH_MISSING` · `FONT_EMBED_FORBIDDEN` · `FONT_UNSUPPORTED` · `DIFFERENT_DRIVE` 추가(이전에는 `SCHEMA_INVALID`), 모든 오류 항목을 `{code, reason, field?}` 형식으로 통일 |

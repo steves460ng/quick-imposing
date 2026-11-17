@@ -247,7 +247,7 @@ Windows 배포본(`dist\QuickImposing\`, `dist\QuickImposing-<버전>.zip`)은 P
 | [docs/SPEC.md](docs/SPEC.md), [docs/TEMPLATE-REQUIREMENTS.md](docs/TEMPLATE-REQUIREMENTS.md) | 배치 규칙과 요구사항 |
 | [docs/UI-DESIGN.md](docs/UI-DESIGN.md) | 화면 구성과 결정 근거 |
 | [docs/REFACTORING.md](docs/REFACTORING.md) | 리팩토링 제안과 진행 상황 |
-| [PR/](PR/README.md) | 변경 제안 · 검토 기록 |
+| [GitHub Pull Requests](https://github.com/steves460ng/quick-imposing/pulls?q=is%3Apr) | 변경 기록(구현 · 결정 · 검증). 2026-11-17 이전의 `PR/` 문서 기록은 커밋 `8dd39b7`에 있다 |
 
 ### 라이선스와 서드파티 고지
 

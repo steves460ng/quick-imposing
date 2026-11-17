@@ -7,7 +7,7 @@
 | 상태 | **제안**. 사용자가 범위를 정하기 전에는 착수하지 않는다 |
 | 개정 | 2026-11-16 코드 대조 검토 반영: R1 범위(CFF 오류) 추가, R2 우선순위 · 동작 변화 정정, R3 발생 경로 명시, R5 `reason` 언어 규칙, R8 완료 기준 범위, R10 주석 처리 범위, R12 별도 변경으로 분리 |
 | 대상 독자 | 이 저장소에서 리팩토링을 맡는 다음 세션(사람 또는 에이전트) |
-| 관련 문서 | `docs/SPEC.md`(배치 · 비변형 규칙), `docs/TEMPLATE-REQUIREMENTS.md`(요구사항), `docs/DEVELOPMENT.md`(실행 · 테스트), `docs/HANDOFF-2026-11-13.md`(현재 상태 · 빌드 절차), `PR/004-gui.md`(GUI 변경 기록) |
+| 관련 문서 | `docs/SPEC.md`(배치 · 비변형 규칙), `docs/TEMPLATE-REQUIREMENTS.md`(요구사항), `docs/DEVELOPMENT.md`(실행 · 테스트), `docs/HANDOFF-2026-11-13.md`(현재 상태 · 빌드 절차), GitHub PR #3(GUI 구현) |
 
 이 문서만 읽고 작업을 시작할 수 있도록 배경, 위치, 완료 기준, 검증 방법을 함께 적는다. 줄 번호는 기준 커밋 기준이며 바뀔 수 있으니 함수 이름으로 찾는다.
 
@@ -222,7 +222,7 @@ diff before.qdf after.qdf    # 차이가 없어야 한다 (/CreationDate 등 제
 
 ### 브랜치 · 병합 · Windows 검증
 
-- 작업 브랜치에 커밋하고 push한다. main 반영은 GitHub PR로 한다. 기록은 `PR/004-gui.md`의 "수정 내역"에 이어 적는다(또는 새 번호 `PR/005-refactoring.md`).
+- 작업 브랜치에 커밋하고 push한다. main 반영은 GitHub PR로 한다. 기록은 GitHub PR 설명에 쓴다.
 - 작업 브랜치에 push하면 GitHub Actions `windows` 워크플로가 Windows에서 pytest, 두 실행기, 배포 빌드(`packaging/build.ps1`)와 시작 점검을 돈다(약 6분). **통과를 확인한 뒤 병합한다.**
 - 동작이 바뀌는 항목(R1 · R3 · R5의 리포트 코드, R2의 리포트 `inputs`, R10 문구, R12 화면)은 사용자에게 먼저 알린다.
 - 리팩토링으로 버전을 올릴 필요는 없다. 화면이나 리포트가 바뀌는 항목을 병합할 때는 `pyproject.toml`의 셋째 자리를 올린다.
@@ -233,17 +233,17 @@ diff before.qdf after.qdf    # 차이가 없어야 한다 (/CreationDate 등 제
 
 | # | 상태 | 커밋 · PR | 비고 |
 |---|---|---|---|
-| R1 | 완료 (2026-11-16, PR #14 병합) | `65c2119`, 브랜치 `claude/refactor-stage1`, `PR/005-refactoring.md` | 글꼴 오류 코드 3개 추가 |
+| R1 | 완료 (2026-11-16, PR #14 병합) | `65c2119`, 브랜치 `claude/refactor-stage1`, GitHub PR #14 | 글꼴 오류 코드 3개 추가 |
 | R2 | 제안 | — | |
-| R3 | 완료 (2026-11-16, PR #14 병합) | `1c739a6`, 브랜치 `claude/refactor-stage1`, `PR/005-refactoring.md` | Linux에서 `relpath`를 바꿔 끼워 검증 |
+| R3 | 완료 (2026-11-16, PR #14 병합) | `1c739a6`, 브랜치 `claude/refactor-stage1`, GitHub PR #14 | Linux에서 `relpath`를 바꿔 끼워 검증 |
 | R4 | 제안 | — | 베타 뒤 |
-| R5 | 완료 (2026-11-16, PR #14 병합) | `78c1be9`, 브랜치 `claude/refactor-stage1`, `PR/005-refactoring.md` |  |
+| R5 | 완료 (2026-11-16, PR #14 병합) | `78c1be9`, 브랜치 `claude/refactor-stage1`, GitHub PR #14 |  |
 | R6 | 제안 | — | |
 | R7 | 제안 | — | |
 | R8 | 제안 | — | 베타 뒤 |
 | R9 | 제안 | — | |
 | R10 | 제안 | — | |
 | R11 | 제안 | — | |
-| R12 | 완료 (2026-11-16, 기능 추가로 처리) | 브랜치 `claude/about-dialog`, `PR/007-about-dialog.md` | 사용자 요청: 작업 프로그램 `도구 → 프로그램 정보`에 버전 · 저장소 링크 |
+| R12 | 완료 (2026-11-16, 기능 추가로 처리) | 브랜치 `claude/about-dialog`, GitHub PR #16 | 사용자 요청: 작업 프로그램 `도구 → 프로그램 정보`에 버전 · 저장소 링크 |
 
 항목을 끝내면 이 표의 상태를 `완료`로 바꾸고 커밋 · PR 번호를 적는다.
