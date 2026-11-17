@@ -188,3 +188,20 @@ def test_stops_without_dialog_and_warns_in_log(window):
     window.repeat_paste_cells(times=4)
     assert "마지막 셀까지 찼습니다. 요청 4칸 중 2칸" in window.log.toPlainText()
     assert window.dialogs == []
+
+
+def test_menu_action_opens_the_dialog(window, monkeypatch):
+    # Regression: QAction.triggered passes checked=False, which used to reach
+    # repeat_paste_cells(times=...) and skip the dialog with an error.
+    copy_first_cell(window)
+    asked = []
+
+    def get_int(*args):
+        asked.append(args)
+        return 2, True
+
+    monkeypatch.setattr(QInputDialog, "getInt", get_int)
+    window.view.select(2)
+    window.repeat_paste_action.trigger()
+    assert len(asked) == 1
+    assert sorted(window.session.placements) == [1, 2, 3]
