@@ -51,3 +51,13 @@ Windows 검증 통과 (2026-11-17): [실행 43990081227](https://github.com/stev
 ## 검토
 
 ## 수정 내역
+
+### 2026-11-17 메뉴 · 단축키로 실행하면 동작하지 않던 결함 (0.8.1)
+
+사용자 보고: "연속 붙여넣기 메뉴만 있고 동작을 안 함. 다이얼로그도 안 뜸."
+
+원인: `QAction.triggered`는 `checked`(False) 값을 넘긴다. 메뉴를 `repeat_paste_cells(times=None)`에 바로 연결해 `times=False`가 되었고, 입력 창을 건너뛴 뒤 `plan_repeat_paste`가 `ValueError`를 냈다. 창 프로그램이라 오류가 화면에 보이지 않았다. 테스트는 함수를 직접 불러 이 경로를 지나지 않았다.
+
+수정: 메뉴를 `lambda: self.repeat_paste_cells()`로 연결. 메뉴 동작(`trigger()`)으로 입력 창이 뜨고 붙여넣기가 되는지 확인하는 회귀 테스트 추가(수정 전 실패, 수정 후 통과 확인). 같은 방식으로 연결된 다른 메뉴(`open_project`, `save_pdf`)는 `if not path`로 처리해 영향이 없다. 버전 0.8.1.
+
+Windows 검증 통과: [실행 43995368847](https://github.com/steves460ng/quick-imposing/actions/runs/43995368847)(`4e9f1be`) 전 단계 성공. pytest 149 passed(Linux).

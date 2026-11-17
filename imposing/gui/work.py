@@ -250,7 +250,8 @@ class WorkWindow(QMainWindow):
         self.repeat_paste_action = QAction(
             "연속 붙여넣기(&R)…", self, shortcut=QKeySequence("Ctrl+Shift+V")
         )
-        self.repeat_paste_action.triggered.connect(self.repeat_paste_cells)
+        # QAction.triggered passes checked=False; it must not become ``times``.
+        self.repeat_paste_action.triggered.connect(lambda: self.repeat_paste_cells())
         menu.addAction(self.repeat_paste_action)
         menu.addSeparator()
         self.delete_action = QAction("선택한 셀 비우기", self, shortcut=QKeySequence.Delete)
