@@ -18,7 +18,7 @@
 2. `docs/TEMPLATE-REQUIREMENTS.md` — 템플릿·프로젝트 요구사항
 3. 이 문서 — 3-1차에서 쓸 파일 형식, 테스트 케이스, 기대값
 
-`docs/TEST-02.md`의 템플릿 형식(`quick-imposing/template@1`)과 오류 규칙 `CARD_TOO_SMALL`·`SLOT_OVERLAP`·`SLOT_OUT_OF_SAFE_AREA`는 3-1차에 적용하지 않는다.
+`docs/TEST-02.md`(2026-11-17 삭제, 내용은 커밋 `2d84f9c`에서 볼 수 있음)의 템플릿 형식(`quick-imposing/template@1`)과 오류 규칙 `CARD_TOO_SMALL`·`SLOT_OVERLAP`·`SLOT_OUT_OF_SAFE_AREA`는 3-1차에 적용하지 않는다.
 
 ## 2. 파일 형식 (3-1차 확정본)
 
@@ -248,7 +248,7 @@ samples/test03-1/
   - 한 줄로 압축된 프리셋 JSON
 - 다음 파일은 수정하지 않는다.
   - `samples/input/`
-  - 기존 문서(`docs/SPEC.md`, `docs/TEMPLATE-REQUIREMENTS.md`, `docs/TEST-02.md`, `docs/HANDOFF-*.md`, 이 문서)
+  - 기존 문서(`docs/SPEC.md`, `docs/TEMPLATE-REQUIREMENTS.md`, `docs/TEST-02.md`(2026-11-17 삭제, 내용은 커밋 `2d84f9c`에서 볼 수 있음), `docs/HANDOFF-*.md`, 이 문서)
 - 이 문서와 기준 문서가 모순되거나 모호하면 임의로 정하지 않는다. PR 설명의 "질문" 항목에 남긴다.
 - `out/`은 커밋하지 않는다.
 

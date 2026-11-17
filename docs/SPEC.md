@@ -281,7 +281,7 @@ y = origin_y + (r−1) × pitch_y
 | 3-1차: 셀 배열·겹침 순서·판 바깥 잘라냄·텍스트 | `docs/TASK-03-1.md` §4 (T31-01~09) | `docs/TEST-03-1-RESULTS.md` |
 | 3-2차: 자동 배열 | `docs/TASK-03-2.md` §3 (T32-01~11) | `docs/TEST-03-2-RESULTS.md` |
 
-v0.5까지의 1차 테스트 케이스(TC1~TC12, 프리셋 기반)와 2차 테스트(`docs/TEST-02.md`, `template@1`)는 현행 형식으로 대체되었다.
+v0.5까지의 1차 테스트 케이스(TC1~TC12, 프리셋 기반)와 2차 테스트(`docs/TEST-02.md`(2026-11-17 삭제, 내용은 커밋 `2d84f9c`에서 볼 수 있음), `template@1`)는 현행 형식으로 대체되었다.
 
 ## 9. 검증 항목 (합격 기준)
 
@@ -339,7 +339,6 @@ quick-imposing/
 │  ├─ SPEC.md                    ← 이 문서
 │  ├─ TEMPLATE-REQUIREMENTS.md   ← 템플릿·프로젝트 요구사항
 │  ├─ TASK-*.md, TEST-*-RESULTS.md ← 단계별 작업 지시서와 결과
-│  ├─ TEST-02.md                 ← 2차 테스트 명세 (대체됨, 기록용)
 │  ├─ CLI-TEST-GUIDE.md          ← 명령행 도구 직접 테스트 가이드
 │  ├─ UI-DESIGN.md               ← GUI 구성·배포 결정
 │  ├─ DEVELOPMENT.md             ← 소스 실행, 명령행 도구, 테스트
@@ -353,13 +352,12 @@ quick-imposing/
 ├─ test03_runner.py, test32_runner.py ← 3-1차·3-2차 테스트 실행기
 ├─ samples/
 │  ├─ input/                     ← 입력 샘플 (수정 금지)
-│  │  ├─ base.pdf                ← 2차 테스트용 (텍스트 포함)
+│  │  ├─ base.pdf                ← 텍스트가 있는 원본 베이스 (3-1차 · 3-2차 실행기에서 사용)
 │  │  ├─ base-front-blank.pdf    ← 3-1차부터, 전면 빈 베이스
 │  │  ├─ base-back-blank.pdf     ← 3-1차부터, 후면 빈 베이스
 │  │  └─ B-1.pdf ~ B-3.pdf
 │  ├─ test03-1/, test03-2/       ← 단계별 픽스처와 기대값
-│  ├─ manual/                    ← 수동 테스트용 템플릿 정의 (docs/CLI-TEST-GUIDE.md)
-│  ├─ templates/, expected/      ← 2차 테스트 픽스처 (template@1, 기록용)
+│  └─ manual/                    ← 수동 테스트용 템플릿 정의 (docs/CLI-TEST-GUIDE.md)
 └─ out/                          ← 실행 결과 (커밋하지 않음)
 ```
 
@@ -397,6 +395,7 @@ quick-imposing/
 | v0.5 | 2026-11-10 | Illustrator 전용 편집 데이터 제거(R11)를 필수 요구사항으로 추가 |
 | v0.6 | 2026-11-11 | `docs/TEMPLATE-REQUIREMENTS.md` v0.3과 3-1차·3-2차 구현 결과에 맞춰 개정. 아래 규칙을 대체했다 |
 | v0.6.1 | 2026-11-12 | V1 기준 보완: `qpdf --check`의 경고(종료 코드 3)는 통과로 보고 리포트에 기록한다. 저장소 구조에 GUI·배포 구성 추가 |
+| v0.7.1 | 2026-11-17 | 저장소 정리: 2차 테스트 명세 `docs/TEST-02.md`(2026-11-17 삭제, 내용은 커밋 `2d84f9c`에서 볼 수 있음)와 픽스처 `samples/templates/`, `samples/expected/`(`template@1`), 쓰지 않는 `requirements.txt` 삭제. §10 저장소 구조 갱신 |
 | v0.7 | 2026-11-16 | 템플릿 메모(`memo`, 선택 키) 추가(§6.1). 작업 프로그램의 확인 후 덮어쓰기 저장, 명령행 `build --overwrite` 추가(§7.3) |
 | v0.6.2 | 2026-11-16 | 리팩토링 1단계(`docs/REFACTORING.md` R1 · R3 · R5): §6.4에 오류 코드 `FONT_GLYPH_MISSING` · `FONT_EMBED_FORBIDDEN` · `FONT_UNSUPPORTED` · `DIFFERENT_DRIVE` 추가(이전에는 `SCHEMA_INVALID`), 모든 오류 항목을 `{code, reason, field?}` 형식으로 통일 |
 

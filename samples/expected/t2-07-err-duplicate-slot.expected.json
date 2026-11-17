@@ -1,6 +1,0 @@
-{
-  "template": "t2-07-err-duplicate-slot",
-  "expect": "error",
-  "error_code": "DUPLICATE_SLOT_ASSIGNMENT",
-  "output_pdf": "must_not_exist"
-}
