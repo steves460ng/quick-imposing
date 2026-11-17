@@ -12,6 +12,7 @@ from PySide6.QtWidgets import (
     QFormLayout,
     QGroupBox,
     QHBoxLayout,
+    QInputDialog,
     QLabel,
     QLineEdit,
     QMainWindow,
@@ -49,6 +50,29 @@ ERROR_TEXT = {
     "PDF_VALIDATION_FAILED": "만든 PDF가 검사를 통과하지 못했습니다.\n{reason}",
     "INPUT_CHANGED": "저장하는 동안 입력 파일이 바뀌었습니다. 다시 저장하세요.",
     "DIFFERENT_DRIVE": "데이터와 저장 위치는 같은 드라이브에 있어야 합니다.\n데이터가 있는 드라이브에 저장하세요.",
+}
+
+
+# Repeated paste (Ctrl+Shift+V). Kept in one table, with named fields and no
+# Korean particles built in code, for the later Korean/English work
+# (docs/HANDOFF-I18N.md).
+REPEAT_PASTE_TEXT = {
+    "title": "연속 붙여넣기",
+    "prompt": (
+        "셀 {cell}부터 복사한 셀 {size}개(빈 칸 포함)를 반복해 붙여넣습니다.\n"
+        "채움 방향 순서로 넣으며, 데이터가 있는 셀이나 마지막 셀에서 멈춥니다.\n"
+        "남은 칸: {remaining}개\n\n반복 횟수:"
+    ),
+    "done": "연속 붙여넣기: 셀 {first}~{last}, 데이터 {count}개 (반복 {repeats}회{extra})",
+    "extra": " + {extra}칸",
+    "stopped_occupied": (
+        "경고 — 연속 붙여넣기가 멈췄습니다. 셀 {cell}에 데이터가 있습니다. "
+        "요청 {wanted}칸 중 {placed}칸을 넣었습니다."
+    ),
+    "stopped_end": (
+        "경고 — 연속 붙여넣기가 멈췄습니다. 마지막 셀까지 찼습니다. "
+        "요청 {wanted}칸 중 {placed}칸을 넣었습니다."
+    ),
 }
 
 
@@ -223,6 +247,11 @@ class WorkWindow(QMainWindow):
         self.paste_action = QAction("셀 붙여넣기(&V)", self, shortcut=QKeySequence.Paste)
         self.paste_action.triggered.connect(self.paste_cells)
         menu.addAction(self.paste_action)
+        self.repeat_paste_action = QAction(
+            "연속 붙여넣기(&R)…", self, shortcut=QKeySequence("Ctrl+Shift+V")
+        )
+        self.repeat_paste_action.triggered.connect(self.repeat_paste_cells)
+        menu.addAction(self.repeat_paste_action)
         menu.addSeparator()
         self.delete_action = QAction("선택한 셀 비우기", self, shortcut=QKeySequence.Delete)
         self.delete_action.triggered.connect(self.remove_selected)
@@ -496,6 +525,58 @@ class WorkWindow(QMainWindow):
                 f"붙여넣지 못한 데이터 {len(names)}개:\n" + "\n".join(f"· {n}" for n in shown),
             )
 
+    def repeat_paste_cells(self, times=None):
+        """Paste the copied cells ``times`` times from the current cell.
+
+        Asks for the count when ``times`` is None. Stops without a dialog in
+        front of an occupied cell or after the last cell; the log says why.
+        """
+        if not self.session or not self.clipboard:
+            return
+        cell = self.view.selected
+        if not cell:
+            QMessageBox.information(self, "셀을 선택하세요", "먼저 붙여넣기를 시작할 셀을 누르세요.")
+            return
+        text = REPEAT_PASTE_TEXT
+        remaining = self.session.remaining_cells(cell)
+        if times is None:
+            times, ok = QInputDialog.getInt(
+                self,
+                text["title"],
+                text["prompt"].format(cell=cell, size=len(self.clipboard), remaining=remaining),
+                1,
+                1,
+                max(remaining, 1),
+                1,
+            )
+            if not ok:
+                return
+        plan = self.session.plan_repeat_paste(cell, self.clipboard, times)
+        if plan["targets"]:
+            count = self.session.apply_paste(plan)
+            self.view.set_placements(self.session.placements)
+            extra = text["extra"].format(extra=plan["extra"]) if plan["extra"] else ""
+            self.notify(
+                text["done"].format(
+                    first=plan["targets"][0][0],
+                    last=plan["targets"][-1][0],
+                    count=count,
+                    repeats=plan["repeats"],
+                    extra=extra,
+                )
+            )
+        if plan["reason"] == "occupied":
+            self.notify(
+                text["stopped_occupied"].format(
+                    cell=plan["blocked_cell"], wanted=plan["wanted"], placed=len(plan["targets"])
+                )
+            )
+        elif plan["reason"] == "end_of_cells":
+            self.notify(
+                text["stopped_end"].format(wanted=plan["wanted"], placed=len(plan["targets"]))
+            )
+        self._update_state()
+
     def clear_all(self):
         if not self.session or not self.session.placements:
             return
@@ -677,6 +758,7 @@ class WorkWindow(QMainWindow):
         self.remove_button.setEnabled(bool(with_data))
         self.copy_action.setEnabled(bool(with_data))
         self.paste_action.setEnabled(active and bool(cell) and bool(self.clipboard))
+        self.repeat_paste_action.setEnabled(self.paste_action.isEnabled())
         self.delete_action.setEnabled(bool(with_data))
         self.clear_button.setEnabled(active and bool(self.session.placements))
         self.save_button.setEnabled(active)

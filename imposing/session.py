@@ -219,6 +219,52 @@ class Session:
         unplaced = [path for path in items[len(targets) :] if path is not None]
         return dict(targets=targets, replaced=replaced, cleared=cleared, unplaced=unplaced)
 
+    def plan_repeat_paste(self, start_cell, items, times):
+        """Work out a repeated paste: ``items`` ``times`` times from ``start_cell``.
+
+        Unlike plan_paste, nothing is replaced: filling stops in front of an
+        occupied cell ("occupied") or after the last cell ("end_of_cells").
+        Every copied item, an empty one (None) too, takes one cell, and a
+        repetition may be cut short. Nothing is changed yet.
+        Returns dict(targets=[(cell, path or None)], reason, blocked_cell,
+        wanted, repeats, extra):
+          wanted   cells the request would fill (len(items) * times)
+          repeats  complete repetitions placed; extra: cells of the cut one
+        """
+        order = self.fill_order()
+        if start_cell not in order:
+            raise SessionError(
+                f"템플릿에 없는 셀입니다: {start_cell}", "CELL_NOT_IN_TEMPLATE"
+            )
+        if not items or times < 1:
+            raise ValueError("Nothing to paste")
+        cells = order[order.index(start_cell) :]
+        items = [None if item is None else Path(os.path.abspath(item)) for item in items]
+        wanted = items * times
+        targets, reason, blocked_cell = [], None, None
+        for index, item in enumerate(wanted):
+            if index >= len(cells):
+                reason = "end_of_cells"
+                break
+            cell = cells[index]
+            if cell in self.placements:
+                reason, blocked_cell = "occupied", cell
+                break
+            targets.append((cell, item))
+        return dict(
+            targets=targets,
+            reason=reason,
+            blocked_cell=blocked_cell,
+            wanted=len(wanted),
+            repeats=len(targets) // len(items),
+            extra=len(targets) % len(items),
+        )
+
+    def remaining_cells(self, start_cell):
+        """Cells from ``start_cell`` to the last one in fill order (inclusive)."""
+        order = self.fill_order()
+        return len(order) - order.index(start_cell) if start_cell in order else 0
+
     def apply_paste(self, plan):
         """Carry out a plan from plan_paste. Returns the number of cells set.
 
