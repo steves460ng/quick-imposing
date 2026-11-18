@@ -142,7 +142,7 @@ def app_version():
         return None
 
 
-def about_box(parent, program):
+def about_box(parent):
     """The "프로그램 정보" dialog: program name, version and repository link."""
     version = app_version() or "알 수 없음"
     box = QMessageBox(parent)
@@ -152,7 +152,7 @@ def about_box(parent, program):
         box.setIconPixmap(icon.pixmap(64, 64))
     box.setTextFormat(Qt.RichText)
     box.setText(
-        f"<b>퀵 임포징</b> — {program}<br><br>"
+        f"<b>퀵 임포징</b><br><br>"
         f"버전 {version}<br>"
         f'<a href="{REPOSITORY_URL}">{REPOSITORY_URL}</a>'
     )

@@ -716,7 +716,7 @@ class WorkWindow(QMainWindow):
         return None
 
     def show_about(self):
-        about_box(self, "작업").exec()
+        about_box(self).exec()
 
     def _default_folder(self):
         if self.session.project_path:
