@@ -41,12 +41,14 @@ def test_packaged_build_reads_version_file(tmp_path, monkeypatch):
 
 def test_unknown_version_is_shown_as_such(app, monkeypatch):
     monkeypatch.setattr(common, "app_version", lambda: None)
-    assert "알 수 없음" in about_box(None, "작업").text()
+    assert "알 수 없음" in about_box(None).text()
 
 
 def test_about_box_has_version_and_link(app):
-    box = about_box(None, "작업")
+    box = about_box(None)
     assert box.windowTitle() == "프로그램 정보"
+    assert box.text().startswith("<b>퀵 임포징</b><br><br>")  # no "— 작업"
+    assert "작업" not in box.text()
     assert f"버전 {project_version()}" in box.text()
     assert f'<a href="{REPOSITORY_URL}">' in box.text()
     assert box.textFormat() == Qt.RichText
