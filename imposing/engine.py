@@ -14,6 +14,7 @@ import pikepdf as p
 from . import fonts
 from .model import (
     PathError,
+    cell_offsets,
     cells,
     overlap_pairs,
     project_errors,
@@ -162,6 +163,7 @@ def generate(project_file, templates_root, output, font_dirs=(), overwrite=False
     if report["errors"]:
         return finish()
     positions = cells(template)
+    offsets = cell_offsets(template)
     size = template["cell"]["size_mm"]
     rotation = template["cell"]["rotation_deg"]
     report["template"] = template
@@ -280,6 +282,7 @@ def generate(project_file, templates_root, output, font_dirs=(), overwrite=False
                 file=name,
                 order=item["order"],
                 xy_mm=list(positions[n]),
+                **({"offset_mm": list(offsets[n])} if n in offsets else {}),
                 cm=cm,
                 bbox=bbox,
                 source_box=list(map(float, box)),

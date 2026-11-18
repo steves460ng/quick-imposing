@@ -123,6 +123,26 @@ def template_errors(t, folder=None):
     require(
         isinstance(t.get("memo", ""), str), "memo", "must be a string if present"
     )
+    offsets = t.get("cell_offsets", {})
+    count = g.get("count")
+    total = (
+        count[0] * count[1]
+        if isinstance(count, list) and len(count) == 2 and all(type(v) == int for v in count)
+        else None
+    )
+    require(
+        isinstance(offsets, dict)
+        and all(
+            isinstance(key, str)
+            and key.isdigit()
+            and int(key) >= 1
+            and (total is None or int(key) <= total)
+            and pair(value)
+            for key, value in offsets.items()
+        ),
+        "cell_offsets",
+        "must map existing cell numbers to two numbers [dx, dy] in mm",
+    )
     fields = t.get("text_fields")
     require(isinstance(fields, list), "text_fields", "must be a list")
     ids = set()
@@ -213,13 +233,31 @@ def project_errors(project):
     return errors
 
 
-def cells(template):
+def base_cells(template):
+    """Cell top-left corners from the grid alone (mm, sheet top-left origin)."""
     grid = template["grid"]
     nx, ny = grid["count"]
     x, y = grid["origin_mm"]
     px, py = grid["pitch_mm"]
     return {
         r * nx + c + 1: (x + c * px, y + r * py) for r in range(ny) for c in range(nx)
+    }
+
+
+def cell_offsets(template):
+    """Per-cell corrections {cell: (dx, dy)} in mm; cells without one are absent."""
+    return {
+        int(cell): (float(dx), float(dy))
+        for cell, (dx, dy) in template.get("cell_offsets", {}).items()
+    }
+
+
+def cells(template):
+    """Actual cell top-left corners: grid position plus the cell's correction."""
+    offsets = cell_offsets(template)
+    return {
+        cell: (x + offsets.get(cell, (0, 0))[0], y + offsets.get(cell, (0, 0))[1])
+        for cell, (x, y) in base_cells(template).items()
     }
 
 

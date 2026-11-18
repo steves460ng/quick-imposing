@@ -55,6 +55,23 @@ DIRECTIONS = [
 PREFERRED_FONTS = ("Malgun Gothic", "맑은 고딕", "Noto Sans CJK KR", "Noto Sans KR")
 
 
+# Cell offset texts, kept together for the later Korean/English work.
+OFFSET_TEXT = {
+    "label": "셀 위치 보정",
+    "clear_one": "이 셀 보정 지우기",
+    "clear_all": "모든 보정 지우기",
+    "readout_offset": " (보정 X{dx}, Y{dy})",
+    "summary": "\n위치를 보정한 셀: {cells}",
+    "none_selected": "셀을 누르면 그 셀의 좌상단 좌표와 크기(mm)가 여기에 표시됩니다.",
+}
+
+
+def signed(value):
+    """+2, -0.5, 0 for an offset readout."""
+    text = number_text(value)
+    return text if value <= 0 else "+" + text
+
+
 def blank_definition():
     return {
         "schema": "quick-imposing/template@2",
@@ -98,6 +115,7 @@ class EditorWindow(QMainWindow):
         self.saved = None  # definition as stored (or blank for a new one)
         self.new_base = None  # base chosen but not saved yet
         self.loading = False
+        self.offsets = {}  # cell -> [dx, dy] mm, per-cell correction of the grid position
         self.setWindowTitle("퀵 임포징 — 템플릿 편집기")
         self.resize(1320, 880)
         self._build_ui()
@@ -256,10 +274,30 @@ class EditorWindow(QMainWindow):
         self.cell_label = QLabel("")
         self.cell_label.setTextInteractionFlags(Qt.TextSelectableByMouse)
         self.view.cellSelected.connect(lambda _: self._show_cell())
+        self.view.item.show_offsets = True
+        # Per-cell correction of the grid position (relative, mm, +Y down).
+        self.offset_x = mm_box(-5000, 5000, 0)
+        self.offset_y = mm_box(-5000, 5000, 0)
+        for box in (self.offset_x, self.offset_y):
+            box.valueChanged.connect(self._offset_changed)
+        self.offset_clear = QPushButton(OFFSET_TEXT["clear_one"])
+        self.offset_clear.clicked.connect(self.clear_cell_offset)
+        self.offset_clear_all = QPushButton(OFFSET_TEXT["clear_all"])
+        self.offset_clear_all.clicked.connect(self.clear_all_offsets)
+        offset_row = QHBoxLayout()
+        offset_row.addWidget(QLabel(OFFSET_TEXT["label"]))
+        offset_row.addWidget(QLabel("X"))
+        offset_row.addWidget(self.offset_x)
+        offset_row.addWidget(QLabel("Y"))
+        offset_row.addWidget(self.offset_y)
+        offset_row.addWidget(self.offset_clear)
+        offset_row.addWidget(self.offset_clear_all)
+        offset_row.addStretch(1)
         right = QWidget()
         column = QVBoxLayout(right)
         column.addWidget(self.view, 1)
         column.addWidget(self.cell_label)
+        column.addLayout(offset_row)
         column.addLayout(row)
 
         splitter = QSplitter()
@@ -379,6 +417,15 @@ class EditorWindow(QMainWindow):
         memo = self.memo_edit.toPlainText().strip()
         if memo:
             definition["memo"] = memo
+        # Optional key, only for cells that exist and are actually corrected.
+        total = self.count_x.value() * self.count_y.value()
+        offsets = {
+            str(cell): [plain_number(dx), plain_number(dy)]
+            for cell, (dx, dy) in sorted(self.offsets.items())
+            if cell <= total and (dx or dy)
+        }
+        if offsets:
+            definition["cell_offsets"] = offsets
         return definition
 
     def _fill_form(self, definition):
@@ -395,6 +442,10 @@ class EditorWindow(QMainWindow):
         self.pitch_y.setValue(definition["grid"]["pitch_mm"][1])
         self.direction.setCurrentIndex(self.direction.findData(definition["fill_direction"]))
         self.memo_edit.setPlainText(definition.get("memo", ""))
+        self.offsets = {
+            int(cell): [float(dx), float(dy)]
+            for cell, (dx, dy) in definition.get("cell_offsets", {}).items()
+        }
         self.table.setRowCount(0)
         for field in definition["text_fields"]:
             self.add_field(field)
@@ -434,18 +485,53 @@ class EditorWindow(QMainWindow):
     def _show_cell(self):
         """Coordinates of the clicked cell, to check the layout against the spec."""
         found = self.cell_position(self.view.selected)
+        offset = self.offsets.get(self.view.selected, [0, 0])
+        for box, value in zip((self.offset_x, self.offset_y), offset):
+            box.blockSignals(True)
+            box.setValue(value if found else 0)
+            box.blockSignals(False)
+            box.setEnabled(found is not None)
+        self.offset_clear.setEnabled(found is not None and any(offset))
+        self.offset_clear_all.setEnabled(bool(self.offsets))
         if found is None:
-            self.cell_label.setText("셀을 누르면 그 셀의 좌상단 좌표와 크기(mm)가 여기에 표시됩니다.")
+            self.cell_label.setText(OFFSET_TEXT["none_selected"])
             return
         _, _, left, top, right, bottom = found
-        self.cell_label.setText(
+        text = (
             f"X{number_text(left)}, Y{number_text(top)} mm "
             f"{number_text(right - left)}x{number_text(bottom - top)}mm"
         )
+        if any(offset):
+            text += OFFSET_TEXT["readout_offset"].format(dx=signed(offset[0]), dy=signed(offset[1]))
+        self.cell_label.setText(text)
+
+    def _offset_changed(self, *_):
+        cell = self.view.selected
+        if not cell or self.cell_position(cell) is None:
+            return
+        value = [plain_number(self.offset_x.value()), plain_number(self.offset_y.value())]
+        if any(value):
+            self.offsets[cell] = value
+        else:
+            self.offsets.pop(cell, None)
+        self._changed()
+
+    def clear_cell_offset(self):
+        if self.offsets.pop(self.view.selected, None) is not None:
+            self._changed()
+
+    def clear_all_offsets(self):
+        if self.offsets:
+            self.offsets.clear()
+            self._changed()
 
     def _changed(self, *_):
         if self.loading:
             return
+        # Fewer cells: corrections of cells that no longer exist are dropped.
+        total = self.count_x.value() * self.count_y.value()
+        for cell in [cell for cell in self.offsets if cell > total]:
+            del self.offsets[cell]
         definition = self.definition()
         base = self.base_file()
         self.view.set_sheet(base, definition)
@@ -465,6 +551,11 @@ class EditorWindow(QMainWindow):
         self.grid_note.setText(
             "피치는 셀 시작점에서 다음 셀 시작점까지의 거리입니다. "
             f"지금 셀 사이 간격: 가로 {gap(gap_x)}, 세로 {gap(gap_y)}"
+            + (
+                OFFSET_TEXT["summary"].format(cells=", ".join(map(str, sorted(self.offsets))))
+                if self.offsets
+                else ""
+            )
         )
         notes = []
         positions = cells(definition)

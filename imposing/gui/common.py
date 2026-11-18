@@ -309,6 +309,7 @@ class SheetItem(QGraphicsItem):
         self.selection = set()  # every selected cell, including the current one
         self.show_orientation = False
         self.show_field_names = False
+        self.show_offsets = False  # mark corrected cells with "*" (template editor)
 
     def fit_rect(self):
         """What the view centres and fits: the sheet, its cells and a margin.
@@ -419,10 +420,15 @@ class SheetItem(QGraphicsItem):
         painter.setBrush(Qt.NoBrush)
         painter.drawRect(rect)
         height = max(2.2, min(4.0, rect.height() * 0.12, rect.width() * 0.12))
+        corrected = (
+            self.show_offsets
+            and self.definition
+            and str(cell) in self.definition.get("cell_offsets", {})
+        )
         self._label(
             painter,
             rect.topLeft() + QPointF(0.8, 0.8),
-            str(cell),
+            f"{cell}*" if corrected else str(cell),
             height,
             QColor("#0b5c8e") if not filled else QColor("#20252b"),
             background=True,
