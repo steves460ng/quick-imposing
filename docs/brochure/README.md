@@ -7,6 +7,7 @@
 | 결과물 | claude.ai Design 캔버스 [퀵 임포징 브로셔](https://claude.ai/artifact/LREr8m5z7QBmQFYFuyD17K) (비공개, 소유자만 열림. 다른 사람에게 보이려면 페이지의 Share 메뉴에서 공유) |
 | 형식 | A4 세로 2쪽(794×1123 px, 쪽마다 아트보드 하나). PDF는 페이지의 Export → "All artboards (.pdf)" |
 | 이 폴더 | 캔버스 파일의 사본: `canvas.json`(인덱스), `Main.dc.html`(1쪽), `Page2.dc.html`(2쪽) |
+| PDF | `quick-imposing-brochure.pdf`(A4 2쪽). 이 폴더의 사본을 Chrome으로 인쇄해 만든 것. 글꼴은 Noto Sans CJK KR(Noto Sans KR과 같은 글자꼴), 스크린샷은 `docs/images/`의 원본. 캔버스를 고치면 다시 만들어야 한다 |
 
 ## 목표와 범위
 
