@@ -248,6 +248,7 @@ Windows 배포본(`dist\QuickImposing\`, `dist\QuickImposing-<버전>.zip`)은 P
 | [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md) | 소스 실행, 명령행 도구, 테스트 |
 | [docs/HANDOFF-2026-11-16.md](docs/HANDOFF-2026-11-16.md) | 현재 상태, 다음에 할 일, 작업 방식 |
 | [docs/HANDOFF-I18N.md](docs/HANDOFF-I18N.md) | 다국어(한국어 · 영어) 버전 검토와 진행 순서(보류) |
+| [docs/brochure/](docs/brochure/README.md) | 소개 브로셔 초안(A4 2쪽)과 작업 인계 |
 | [docs/HANDOFF-2026-11-13.md](docs/HANDOFF-2026-11-13.md) | 빌드 · 배포 절차와 문제 해결 |
 | [docs/SPEC.md](docs/SPEC.md), [docs/TEMPLATE-REQUIREMENTS.md](docs/TEMPLATE-REQUIREMENTS.md) | 배치 규칙과 요구사항 |
 | [docs/UI-DESIGN.md](docs/UI-DESIGN.md) | 화면 구성과 결정 근거 |
