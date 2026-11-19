@@ -1,0 +1,13 @@
+{
+  "permissions": {
+    "deny": [
+      "Read(./samples/**/*.pdf)",
+      "Read(./docs/images/**)",
+      "Read(./out/**)",
+      "Read(./dist/**)",
+      "Read(./build/**)",
+      "Read(./*.egg-info/**)",
+      "Read(**/__pycache__/**)"
+    ]
+  }
+}

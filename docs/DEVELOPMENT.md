@@ -97,6 +97,15 @@ quick-imposing build out/autofill/second.qiproj.json \
 
 ## 테스트
 
+검사는 보통 `scripts/check.py` 하나로 합니다. 성공하면 한 줄만, 실패하면 실패 부분만 출력합니다. ruff가 필요합니다(`pip install ruff==0.16.9`).
+
+```sh
+python scripts/check.py                    # 전체: ruff F, pytest, 3-2차 실행기(3-1차 포함), GUI 시작 점검 (약 2분)
+python scripts/check.py imposing/session.py   # 그 파일의 ruff와 관련된 pytest만
+```
+
+GitHub Actions `ci` 워크플로(`.github/workflows/ci.yml`)가 PR과 main push에서 Linux로 전체 검사를 돌립니다. 문서만 바뀐 변경은 건너뜁니다. 각 명령을 따로 돌리려면 아래를 씁니다.
+
 ```sh
 python -m pytest -q          # GUI 테스트는 PySide6가 없으면 건너뜁니다
 python test03_runner.py
