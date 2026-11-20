@@ -11,7 +11,7 @@ import tempfile
 import pikepdf as p
 from PIL import Image, ImageChops, ImageDraw
 
-from imposing.engine import create_template, generate
+from imposing.engine import card_group, create_template, generate
 from imposing.pdf import check as qpdf_check
 from imposing.pdf import canonical, digest, invoke, render, save, streams
 
@@ -325,7 +325,8 @@ def validate_case(case, project_file, root, output, report, expected):
                 )
                 check(
                     f"V10.{n}",
-                    canonical(f.get("/Group")) == canonical(sp.obj.get("/Group")),
+                    canonical(f.get("/Group"))
+                    == canonical(card_group(sp.obj.get("/Group"))[0]),
                 )
                 # Cache identical isolated source/crop comparisons across repeated cells.
                 signature = (
