@@ -346,6 +346,7 @@ quick-imposing/
 ├─ docs/
 │  ├─ SPEC.md                    ← 이 문서
 │  ├─ TEMPLATE-REQUIREMENTS.md   ← 템플릿·프로젝트 요구사항
+│  ├─ COLOR.md                   ← 인쇄 색상 원칙·사례·조사 방법
 │  ├─ TASK-*.md, TEST-*-RESULTS.md ← 단계별 작업 지시서와 결과
 │  ├─ CLI-TEST-GUIDE.md          ← 명령행 도구 직접 테스트 가이드
 │  ├─ UI-DESIGN.md               ← GUI 구성·배포 결정
