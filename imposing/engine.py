@@ -24,6 +24,34 @@ from .model import (
 from .pdf import MM, digest, streams, remove_illustrator, save, render, check
 
 
+def card_group(group):
+    """Transparency group for a placed card, blended in CMYK.
+
+    The card page's group keeps /S /I /K, but a non-CMYK blending space
+    (e.g. /DeviceRGB written by Ghostscript) is replaced with /DeviceCMYK.
+    Blending in RGB sends the whole card through CMYK -> RGB -> CMYK at
+    print time and turns K-only gray and black into four-colour mixes.
+    Returns ``(group, replaced)``; ``replaced`` is the original /CS as text,
+    or None when nothing changed.
+    """
+    if group is None or "/CS" not in group:
+        return group, None
+    cs = group.CS
+    if cs == p.Name.DeviceCMYK:
+        return group, None
+    if (
+        isinstance(cs, p.Array)
+        and len(cs) == 2
+        and cs[0] == p.Name.ICCBased
+        and int(cs[1].get("/N", 0)) == 4
+    ):
+        return group, None
+    replaced = str(cs) if isinstance(cs, p.Name) else str(cs[0])
+    copied = p.Dictionary({key: value for key, value in group.items()})
+    copied.CS = p.Name.DeviceCMYK
+    return copied, replaced
+
+
 def create_template(definition, base, root):
     """Save a definition and byte-identical base copy in a new template folder."""
     errors = template_errors(definition)
@@ -298,7 +326,16 @@ def generate(project_file, templates_root, output, font_dirs=(), overwrite=False
             form.BBox = p.Array(bbox)
             form.Resources = sp.Resources
             if "/Group" in sp.obj:
-                form.Group = sp.obj.Group
+                form.Group, replaced = card_group(sp.obj.Group)
+                if replaced:
+                    report["info"].append(
+                        dict(
+                            code="B_GROUP_CS_REPLACED",
+                            cell=n,
+                            file=name,
+                            original=replaced,
+                        )
+                    )
             key = unique(page.Resources.XObject, "Card")
             page.Resources.XObject[key] = dest.copy_foreign(form)
             entry.update(xobject=key, drawn=True)
