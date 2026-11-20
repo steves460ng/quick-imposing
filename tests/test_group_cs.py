@@ -18,9 +18,9 @@ DATA = ROOT / "samples/test03-2/data"
 
 
 def make_card(path, cs):
-    """A Ghostscript-style card: 60% gray in DeviceGray and K-only black."""
+    """A synthetic card: 60% gray in DeviceGray and K-only black."""
     pdf = p.new()
-    pdf.add_blank_page(page_size=(124.8, 221.04))
+    pdf.add_blank_page(page_size=(130, 200))
     page = pdf.pages[0].obj
     page.Contents = pdf.make_stream(
         b"q .4 g 10 20 50 150 re f Q q 0 0 0 1 k 65 20 50 150 re f Q"
