@@ -38,5 +38,6 @@ python scripts/check.py
 - 이 환경에서는 GitHub의 다른 저장소 배포 파일(qpdf, poppler-windows 등)을 내려받을 수 없다. Windows 배포 파일 내용은 워크플로 로그로 확인한다.
 
 ## 지킬 것
+- 인쇄 색은 중요하다. 결과 PDF의 색에 영향을 줄 수 있는 변경이나 색 문제 조사는 먼저 `docs/COLOR.md`를 읽고, 끝나면 그 문서에 기록한다.
 - `.claude/settings.json`으로 읽기를 막은 파일(샘플 PDF, 화면 캡처, 빌드 결과물)은 우회해서 읽지 않는다. PDF 구조는 pikepdf 스크립트로 본다.
 - 다국어 작업(#34)에 대비해, 새 화면 문구는 한 곳에 모으고(`REPEAT_PASTE_TEXT` 방식), 화면 없는 계층에서는 한국어 문장 대신 오류 코드와 값을 넘기고, 조사를 붙이는 f-string(`을(를)` 등)을 새로 만들지 않는다.

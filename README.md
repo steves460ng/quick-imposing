@@ -252,6 +252,7 @@ Windows 배포본(`dist\QuickImposing\`, `dist\QuickImposing-<버전>.zip`)은 P
 | [docs/brochure/](docs/brochure/README.md) | 소개 브로셔 초안(A4 2쪽)과 작업 인계 |
 | [docs/HANDOFF-2026-11-13.md](docs/HANDOFF-2026-11-13.md) | 빌드 · 배포 절차와 문제 해결 |
 | [docs/SPEC.md](docs/SPEC.md), [docs/TEMPLATE-REQUIREMENTS.md](docs/TEMPLATE-REQUIREMENTS.md) | 배치 규칙과 요구사항 |
+| [docs/COLOR.md](docs/COLOR.md) | 인쇄 색상 원칙, 사례(회색 글씨가 누렇게 인쇄됨), 조사 방법 |
 | [docs/UI-DESIGN.md](docs/UI-DESIGN.md) | 화면 구성과 결정 근거 |
 | [docs/REFACTORING.md](docs/REFACTORING.md) | 리팩토링 제안과 진행 상황 |
 | [GitHub Pull Requests](https://github.com/steves460ng/quick-imposing/pulls?q=is%3Apr) | 변경 기록(구현 · 결정 · 검증). 2026-11-17 이전의 `PR/` 문서 기록은 커밋 `8dd39b7`에 있다 |
