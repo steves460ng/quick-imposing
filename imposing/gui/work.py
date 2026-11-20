@@ -53,6 +53,15 @@ ERROR_TEXT = {
 }
 
 
+# Load data (Ctrl+E, GitHub issue #37). Kept in one table for the later
+# Korean/English work (docs/HANDOFF-I18N.md).
+LOAD_DATA_SHORTCUT = "Ctrl+E"
+LOAD_DATA_TEXT = {
+    "menu": "데이터 불러오기(&L)…",
+    "tooltip": "선택한 셀부터 PDF를 불러옵니다 ({shortcut})",
+}
+
+
 # Repeated paste (Ctrl+Shift+V). Kept in one table, with named fields and no
 # Korean particles built in code, for the later Korean/English work
 # (docs/HANDOFF-I18N.md).
@@ -139,12 +148,15 @@ class WorkWindow(QMainWindow):
         self.cell_info.setWordWrap(True)
         self.load_button = QPushButton("데이터 불러오기…")
         self.load_button.clicked.connect(self.load_files)
+        self.load_button.setToolTip(
+            LOAD_DATA_TEXT["tooltip"].format(shortcut=LOAD_DATA_SHORTCUT)
+        )
         self.remove_button = QPushButton("셀 비우기")
         self.remove_button.clicked.connect(self.remove_selected)
         self.clear_button = QPushButton("모두 비우기")
         self.clear_button.clicked.connect(self.clear_all)
         hint = QLabel(
-            "셀을 누르고 데이터를 불러옵니다. 파일을 여러 개 고르면 선택한 셀부터 "
+            "셀을 누르고 데이터를 불러옵니다(Ctrl+E). 파일을 여러 개 고르면 선택한 셀부터 "
             "파일 이름 순서로 채웁니다. 탐색기에서 셀로 끌어다 놓아도 됩니다.\n"
             "Ctrl·Shift+클릭으로 여러 셀을 고르고 Ctrl+C, Ctrl+V로 복사해 붙여넣습니다."
         )
@@ -232,6 +244,11 @@ class WorkWindow(QMainWindow):
         action = QAction("프로젝트 열기(&O)…", self, shortcut=QKeySequence.Open)
         action.triggered.connect(self.open_project)
         menu.addAction(action)
+        self.load_action = QAction(
+            LOAD_DATA_TEXT["menu"], self, shortcut=QKeySequence(LOAD_DATA_SHORTCUT)
+        )
+        self.load_action.triggered.connect(self.load_files)
+        menu.addAction(self.load_action)
         action = QAction("PDF 저장(&S)…", self, shortcut=QKeySequence.Save)
         action.triggered.connect(self.save_pdf)
         menu.addAction(action)
@@ -756,6 +773,7 @@ class WorkWindow(QMainWindow):
         chosen = self.view.selected_cells if active else []
         with_data = [c for c in chosen if c in self.session.placements] if active else []
         self.load_button.setEnabled(active and bool(cell))
+        self.load_action.setEnabled(self.load_button.isEnabled())
         self.remove_button.setEnabled(bool(with_data))
         self.copy_action.setEnabled(bool(with_data))
         self.paste_action.setEnabled(active and bool(cell) and bool(self.clipboard))
